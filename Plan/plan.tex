@@ -1,0 +1,98 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{indentfirst}
+\usepackage{amsmath, amsfonts}
+\usepackage[nofoot,hdivide={2cm,*,2cm},vdivide={2cm,*,2cm}]{geometry}
+\frenchspacing
+\pagestyle{empty}
+
+\author{Franciszek Zdobylak}
+\title{\Huge{\bf{Gra w Statki}}\\
+				\small projekt na Wstęp do Programowania w C}
+
+\begin{document}
+\maketitle
+
+\section{Opis projektu}
+
+Celem mojego projektu jest zaimplementowanie dwuosobowej gry w statki. Każdy użytkownik będzie mógł wybrać grę którą chce kontynuować lub gracza z którym chce rozpocząć nową grę.
+Program będzie umożliwiał grę dwóch graczy korzystających z jednego komputera.
+
+\section{Użyte technologie}
+W moim projekcie będę korzystał z języka C wraz z biblioteką GTK+.
+
+\section{Moduły}
+Program będzie składał się z modułów, które będą się między sobą komunikowały. Oto cztery główne moduły:
+\begin{itemize}
+	\item Modułu głównego okna
+	\item Modułu obsługi plików (komunikacji)
+	\item Modułu obsługi rozgrywki
+	\item Modułu ustawienia planszy
+\end{itemize}
+
+\subsection{Moduł głównego okna}
+Jego zadaniem będzie komunikacja z graczem. Wyświetlanie planszy oraz przekazywanie wyborów gracza do reszty modułów.
+Główne funkcje:
+\begin{itemize}
+	\item Wyświetlenie głównego okna programu
+	\item Rozpoczynanie nowej gry z wybranym graczem
+	\item Kontynuowanie gry z wybranym graczem (jeśli istnieje taka)
+	\item Pobieranie ruchu wybranego przez gracza
+	\item Aktualizowanie planszy
+\end{itemize}
+
+\subsection{Moduł obsługi rozgrywki}
+Jego zadaniem będzie obsługa wszystkich wydarzeń do poprawnego prowadzenia rozgrywki.
+Główne funkcje:
+\begin{itemize}
+	\item Sprawdzanie poprawności ruchu
+	\item Wykonanie ruchu
+	\item Sprawdzenie czy proponowana pozycja statku jest dozwolona
+\end{itemize}
+
+\subsection{Moduł obsługi plików (komunikacji)}
+Jego zadaniem jest zarządzaniem zapisanymi rozgrywkami.
+
+
+{\bf UWAGA!!!} Druga opcją jest przechowywanie planszy tylko u użzytkownika, a wysyłanie tylko danych o ruchach.
+Jest to o tyle lepsze, że gracze mają mocno utrudnione ,,podglądanie''.
+
+Główne funkcje:
+\begin{itemize}
+	\item Tworzenie nowej gry
+	\item Otwieranie rozpoczętej gry
+	\item Usunięcie rozpoczętej gry
+	\item Zapisywanie stanu (co skutkuje ,,wysłaniem'' zmian do drugiego gracza)
+\end{itemize}
+
+\subsection{Moduł ustawienia planszy}
+Jego zadaniem jest ustawienie statków na planszy podczas tworzenia nowej gry.
+Uznałem, że jest to jedno z trudniejszych zagadnień tego projektu, dlatego poświęcam na to osobny moduł.
+Główne funkcje:
+\begin{itemize}
+	\item Wyświetlenie okna ustawienia planszy
+	\item Pobieranie wyboru gracza
+\end{itemize}
+
+\section{Zapisywanie rozgrywki}
+Stan rozgrywki będzie zapisywany w pliku o nazwie \emph{id\_rozgrywki.log}.
+Inforamcje zawarte w takim pliku:
+\begin{enumerate}
+	\item Ruchy poszczególnych graczy wykonane wcześniej (w kolejności od najnowszego do najstarszego)
+	\item Opis rozmieszczenia statków na planszach
+\end{enumerate}
+Kolejność jest ważna, ponieważ dane które program potrzebuje są podane od razu na początku.
+
+\section{Planowane usprawnienia}
+Program ma spełniać jedynie podstawowe działania. Niektóre funkcje dostępne w wielu współczesnych programach nie będą dostępne od razu.
+Funkcje, które planuję dodać w przyszłości:
+\begin{itemize}
+	\item Automatyczne odświeżanie 
+	\item Automatyczne sprawdzanie dostępnych pól do postawienia statku
+	\item Podstawowe statystyki graczy
+	\item Zmiany reguł gry (np. liczby statków, rozmiaru planszy, etc.)
+\end{itemize}
+
+\end{document}
