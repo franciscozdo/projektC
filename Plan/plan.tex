@@ -27,7 +27,7 @@ W moim projekcie będę korzystał z języka C wraz z biblioteką GTK+.
 Program będzie składał się z modułów, które będą się między sobą komunikowały. Oto cztery główne moduły:
 \begin{itemize}
 	\item Modułu głównego okna
-	\item Modułu obsługi plików (komunikacji)
+	\item Modułu komunikacji
 	\item Modułu obsługi rozgrywki
 	\item Modułu ustawienia planszy
 \end{itemize}
@@ -38,7 +38,6 @@ Główne funkcje:
 \begin{itemize}
 	\item Wyświetlenie głównego okna programu
 	\item Rozpoczynanie nowej gry z wybranym graczem
-	\item Kontynuowanie gry z wybranym graczem (jeśli istnieje taka)
 	\item Pobieranie ruchu wybranego przez gracza
 	\item Aktualizowanie planszy
 \end{itemize}
@@ -48,23 +47,19 @@ Jego zadaniem będzie obsługa wszystkich wydarzeń do poprawnego prowadzenia ro
 Główne funkcje:
 \begin{itemize}
 	\item Sprawdzanie poprawności ruchu
-	\item Wykonanie ruchu
+	\item Zapisanie statusu pola (U - gdy jeszcze nie znamy, M1\dots5 - gdy poznamy status)
 	\item Sprawdzenie czy proponowana pozycja statku jest dozwolona
+	\item Sprawdzanie czy statek został trafiny
 \end{itemize}
 
-\subsection{Moduł obsługi plików (komunikacji)}
-Jego zadaniem jest zarządzaniem zapisanymi rozgrywkami.
-
-
-{\bf UWAGA!!!} Druga opcją jest przechowywanie planszy tylko u użzytkownika, a wysyłanie tylko danych o ruchach.
-Jest to o tyle lepsze, że gracze mają mocno utrudnione ,,podglądanie''.
+\subsection{Moduł komunikacji}
+Jego zadaniem jest przesyłanie ruchu gracza oraz sprawdzenie statusu poprzedniego strzału.
 
 Główne funkcje:
 \begin{itemize}
-	\item Tworzenie nowej gry
-	\item Otwieranie rozpoczętej gry
-	\item Usunięcie rozpoczętej gry
-	\item Zapisywanie stanu (co skutkuje ,,wysłaniem'' zmian do drugiego gracza)
+	\item Zapisywanie strzału ze statusem U (unknown)
+	\item Aktualizowanie statusu strzału przeciwnika
+	\item Sprawdzanie statusu poprzedniego strzału
 \end{itemize}
 
 \subsection{Moduł ustawienia planszy}
@@ -77,19 +72,15 @@ Główne funkcje:
 \end{itemize}
 
 \section{Zapisywanie rozgrywki}
-Stan rozgrywki będzie zapisywany w pliku o nazwie \emph{id\_rozgrywki.log}.
-Inforamcje zawarte w takim pliku:
-\begin{enumerate}
-	\item Ruchy poszczególnych graczy wykonane wcześniej (w kolejności od najnowszego do najstarszego)
-	\item Opis rozmieszczenia statków na planszach
-\end{enumerate}
-Kolejność jest ważna, ponieważ dane które program potrzebuje są podane od razu na początku.
+Program każdego z graczy będzie pamiętał rozmieszczenie statkó, oraz planszę z zaznaczonymi strzałami.
+Każdy strzał będzie zapisywany do pliku/ plików, a następnie sprawdzany przez program przeciwnika i dopisywany status tego strzału.
+\{m - pudło, 1\dots5 - dlugosc statku, u - nie znany (jeszcze)\}.
 
 \section{Planowane usprawnienia}
 Program ma spełniać jedynie podstawowe działania. Niektóre funkcje dostępne w wielu współczesnych programach nie będą dostępne od razu.
 Funkcje, które planuję dodać w przyszłości:
 \begin{itemize}
-	\item Automatyczne odświeżanie 
+	\item Automatyczne odświeżanie
 	\item Automatyczne sprawdzanie dostępnych pól do postawienia statku
 	\item Podstawowe statystyki graczy
 	\item Zmiany reguł gry (np. liczby statków, rozmiaru planszy, etc.)
