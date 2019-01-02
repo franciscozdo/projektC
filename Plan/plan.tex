@@ -17,73 +17,44 @@
 
 \section{Opis projektu}
 
-Celem mojego projektu jest zaimplementowanie dwuosobowej gry w statki. Każdy użytkownik będzie mógł wybrać grę którą chce kontynuować lub gracza z którym chce rozpocząć nową grę.
-Program będzie umożliwiał grę dwóch graczy korzystających z jednego komputera.
+Celem mojego projektu jest zaimplementowanie dwuosobowej gry w statki. Program będzie uruchamiany z nazwą użytkownika (A lub B) jako parametrem.
 
-\section{Użyte technologie}
-W moim projekcie będę korzystał z języka C wraz z biblioteką GTK+.
+\section{Interakcja z użytkownikiem}
+Program będzie się komunikował z użytkownikiem przez okienko stworzone dzięki bibliotece GTK. Będzie w nim wyświetlana plansza na której będą zaznaczone statki gracza
+(wraz z miejscami trafionymi przez przeciwnika) oraz plansza z miejscami w które trafił gracz przeciwny.
+
+\section{Funkcje programu}
+\begin{itemize}
+	\item Komunikowanie się z bliźniaczym procesem
+	\item Pobieranie ruchu wykonanego przez użytkownika (i sprawdzenie poprawności)
+	\item Zaznaczanie i wyświetlanie wykonanych ruchów (gracza i przeciwnika) na planszach
+\end{itemize}
 
 \section{Moduły}
-Program będzie składał się z modułów, które będą się między sobą komunikowały. Oto cztery główne moduły:
+Program będzie składał się z modułów. Oto cztery główne moduły:
 \begin{itemize}
 	\item Modułu głównego okna
-	\item Modułu komunikacji
+	\begin{itemize}
+		\item wyświetlanie plansza
+		\item pobieranie ruchu
+		\item aktualizowanie planszy (np. po strzale przeciwnika)
+	\end{itemize}
 	\item Modułu obsługi rozgrywki
+	\begin{itemize}
+		\item sprawdzanie poprawności ruchu
+		\item sprawdzanie rozmieszczenia statków
+		\item tworzenie i aktualizowanie opisu planszy
+	\end{itemize}
+	\item Modułu komunikacji
+	\begin{itemize}
+		\item pobieranie inforamcji z potoków (w odpowiednim formacie)
+		\item pisanie informacji do potoków (w odpowiednim formacie)
+	\end{itemize}
 	\item Modułu ustawienia planszy
+	\begin{itemize}
+		\item ustawianie planszy na początku rozgrywki
+	\end{itemize}
 \end{itemize}
 
-\subsection{Moduł głównego okna}
-Jego zadaniem będzie komunikacja z graczem. Wyświetlanie planszy oraz przekazywanie wyborów gracza do reszty modułów.
-Główne funkcje:
-\begin{itemize}
-	\item Wyświetlenie głównego okna programu
-	\item Rozpoczynanie nowej gry z wybranym graczem
-	\item Pobieranie ruchu wybranego przez gracza
-	\item Aktualizowanie planszy
-\end{itemize}
-
-\subsection{Moduł obsługi rozgrywki}
-Jego zadaniem będzie obsługa wszystkich wydarzeń do poprawnego prowadzenia rozgrywki.
-Główne funkcje:
-\begin{itemize}
-	\item Sprawdzanie poprawności ruchu
-	\item Zapisanie statusu pola (U - gdy jeszcze nie znamy, M1\dots5 - gdy poznamy status)
-	\item Sprawdzenie czy proponowana pozycja statku jest dozwolona
-	\item Sprawdzanie czy statek został trafiny
-\end{itemize}
-
-\subsection{Moduł komunikacji}
-Jego zadaniem jest przesyłanie ruchu gracza oraz sprawdzenie statusu poprzedniego strzału.
-
-Główne funkcje:
-\begin{itemize}
-	\item Zapisywanie strzału ze statusem U (unknown)
-	\item Aktualizowanie statusu strzału przeciwnika
-	\item Sprawdzanie statusu poprzedniego strzału
-\end{itemize}
-
-\subsection{Moduł ustawienia planszy}
-Jego zadaniem jest ustawienie statków na planszy podczas tworzenia nowej gry.
-Uznałem, że jest to jedno z trudniejszych zagadnień tego projektu, dlatego poświęcam na to osobny moduł.
-Główne funkcje:
-\begin{itemize}
-	\item Wyświetlenie okna ustawienia planszy
-	\item Pobieranie wyboru gracza
-\end{itemize}
-
-\section{Zapisywanie rozgrywki}
-Program każdego z graczy będzie pamiętał rozmieszczenie statkó, oraz planszę z zaznaczonymi strzałami.
-Każdy strzał będzie zapisywany do pliku/ plików, a następnie sprawdzany przez program przeciwnika i dopisywany status tego strzału.
-\{m - pudło, 1\dots5 - dlugosc statku, u - nie znany (jeszcze)\}.
-
-\section{Planowane usprawnienia}
-Program ma spełniać jedynie podstawowe działania. Niektóre funkcje dostępne w wielu współczesnych programach nie będą dostępne od razu.
-Funkcje, które planuję dodać w przyszłości:
-\begin{itemize}
-	\item Automatyczne odświeżanie
-	\item Automatyczne sprawdzanie dostępnych pól do postawienia statku
-	\item Podstawowe statystyki graczy
-	\item Zmiany reguł gry (np. liczby statków, rozmiaru planszy, etc.)
-\end{itemize}
 
 \end{document}
