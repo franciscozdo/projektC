@@ -4,5 +4,6 @@
 #include "game.h"
 
 void sendMove(PipesPtr pipes, Shoot s); // wysyła ruch
-void getMessage(PipesPtr pipes, char *m); // pobiera wiadomość m = "m"  lub "r"
+bool getMessage(PipesPtr pipes, char *m); // pobiera wiadomość m = "m"  lub "r"
 void sendFeedback(PipesPtr pipes, Shoot s, Status stat);
+//bool getMessage(PipesPtr pipes, char *m);

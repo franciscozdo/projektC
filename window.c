@@ -8,12 +8,6 @@ static GtkWidget *window, *buffer;
 static char *my_name, *opponent_name;
 static PipesPtr pipes;
 
-/*
- void refresh(GtkWidget *widget, gpointer data) {
-	g_print("Ten przycisk będzie kiedyś służył do odświeżania\n");
-}
-*/
-
 void pokazBlad(char *komunikat)
 {
     GtkWidget *dialog;
@@ -86,7 +80,7 @@ int main(int argc, char **argv) {
 
 	// Tu trzeba jakieś cholerstwo do wyświetlania plansz wstawić
 
-    //g_timeout_add(100,refresh,NULL);
+    g_timeout_add(100,refresh,NULL);
 	gtk_widget_show_all(window);
 
 	gtk_main();
@@ -117,7 +111,7 @@ static void send_move (GtkWidget *widget, GtkWidget *text)
 	if (!isCorrect(s)) {
 		incorrectShoot();
 	} else{
-		//sendMove(pipes, s);	
+		sendMove(pipes, s);	
 		printf ("Wysłałem: %d %d\n", s.x, s.y);
 	}
 }
@@ -132,13 +126,13 @@ static void incorrectShoot()
     gtk_widget_destroy (dialog);
 
 }
-/*
+
 static gboolean refresh(gpointer data)
 {
-
-	 * Sprawdzenie wiadomosci
-	 * zaktualizowanie statusu
-	 * wysłanie jeśli trzeba
-	return 1;
+	char msg[5];
+	if (getMessage(pipes, msg)) {
+		printf("Dostałem wiadomość: %s\n", msg);
+	}
+	return TRUE;
 }
-*/
+
