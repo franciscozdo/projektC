@@ -2,4 +2,4 @@ Plan/*.aux
 Plan/*.log
 test.c
 win
-
+*.swp
