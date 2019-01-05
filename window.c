@@ -25,6 +25,7 @@ void pokazBlad(char *komunikat)
 
 static void end (GtkWidget *widget, gpointer *data);
 static void send_move (GtkWidget *widger, GtkWidget *data);
+static void incorrectShoot();
 static gboolean refresh(gpointer data);
 
 int main(int argc, char **argv) {
@@ -99,27 +100,45 @@ static void end (GtkWidget *widget, gpointer *data)
 	gtk_main_quit();
 }
 
-static void send_move (GtkWidget *widger, GtkWidget *text)
+static void send_move (GtkWidget *widget, GtkWidget *text)
 {
 	gchar in[MAKS_DL_TEKSTU];
 	strcpy(in, gtk_entry_get_text( GTK_ENTRY(text)));
 	gtk_entry_set_text( GTK_ENTRY(text), "");
+	printf("%d%d%d %c%c%c\n", in[0], in[1], in[2], in[0], in[1], in[2]);
+	/*
+	in[2] = 'a';
 	int x = in[0] - 'A';
 	int y = in[1] - '0' - 1; // -1 bo numerujemy od 0 a użytkownik wpisuje od 1
-	if (isdigit(in[2]))		// <------------------------------------------------To chyba nie działa bo nie czyta 10 :(
+	if (isdigit(in[2]))		// <-----------------------To chyba nie działa bo nie czyta 10 :(
 		y = y * 10 + in[2] - '0' - 1;
-	Shoot s = makeShoot(x, y);
-	sendMove(pipes, s);	
-	printf ("Wysłałem: %d %d\n", x, y);
+	*/
+	Shoot s = makeShootFromStr(in);
+	if (!isCorrect(s)) {
+		incorrectShoot();
+	} else{
+		//sendMove(pipes, s);	
+		printf ("Wysłałem: %d %d\n", s.x, s.y);
+	}
+}
+
+static void incorrectShoot()
+{
+    GtkWidget *dialog;
+	char komunikat[100] = "Niepoprawne współrzędne strzału.\n Spróbuj jeszcze raz.\n";
+    dialog=gtk_message_dialog_new (GTK_WINDOW(window),GTK_DIALOG_DESTROY_WITH_PARENT,
+				   GTK_MESSAGE_ERROR,GTK_BUTTONS_CLOSE,"%s",komunikat);
+    gtk_dialog_run (GTK_DIALOG (dialog));
+    gtk_widget_destroy (dialog);
+
 }
 /*
 static gboolean refresh(gpointer data)
 {
-	/*
+
 	 * Sprawdzenie wiadomosci
 	 * zaktualizowanie statusu
 	 * wysłanie jeśli trzeba
-	 * /	
 	return 1;
 }
 */
