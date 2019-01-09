@@ -1,12 +1,16 @@
 #include <gtk/gtk.h>
 #include "fifo.h"
 #include "msg.h"
+#include "game.h"
 
 #define MAKS_DL_TEKSTU 3
+#define N 10
 
-static GtkWidget *window, *buffer;
+static GtkWidget *window;
 static char *my_name, *opponent_name;
 static PipesPtr pipes;
+static GtkWidget *my_but[100], *opp_but[100];
+static Board my_board, opp_board;
 
 void pokazBlad(char *komunikat)
 {
@@ -18,7 +22,8 @@ void pokazBlad(char *komunikat)
 }
 
 static void end (GtkWidget *widget, gpointer *data);
-static void send_move (GtkWidget *widger, GtkWidget *data);
+static void send_move (GtkWidget *widget, GtkWidget *data);
+static void get_move (GtkWidget * widget, char* ind);
 static void incorrectShoot();
 static gboolean refresh(gpointer data);
 
@@ -32,6 +37,9 @@ int main(int argc, char **argv) {
 		my_name = "B"; opponent_name = "A";
 	}
 
+	clearBoard(my_board);
+	clearBoard(opp_board);
+
 	gtk_init(&argc, &argv);
 	char win_name[] = "Statki x";
 	sprintf(win_name, "Statki %s", my_name);
@@ -43,42 +51,35 @@ int main(int argc, char **argv) {
 	GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add(GTK_CONTAINER(window), box1);
 
-	buffer = (GtkWidget *)gtk_text_buffer_new (NULL);
-    GtkWidget *text_view = gtk_text_view_new_with_buffer (GTK_TEXT_BUFFER(buffer));
-    gtk_text_view_set_wrap_mode (GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD);
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
-    gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(text_view), FALSE);
+	GtkWidget *grid1 = gtk_grid_new();
+	gtk_box_pack_start(GTK_BOX(box1), grid1, FALSE, FALSE, 0);
+	for (int i = 0; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			int ind = i * N + j;
+			my_but[ind] = gtk_button_new();
+			char index[3];
+			sprintf(index, "%d%d", i, j);
+			g_signal_connect(G_OBJECT(my_but[ind]), "clicked", G_CALLBACK(get_move), index);
+			gtk_grid_attach(GTK_GRID(grid1), my_but[ind], i, j, 1, 1);
+		}
+	}
+	GtkWidget *separator = gtk_button_new();
+	gtk_grid_attach(GTK_GRID(grid1), separator, N, 0, 1, 10);
 
-	//gtk_grid_attach(GTK_GRID(grid), text_view, 0, 0, 60, 20);
-	gtk_box_pack_end(GTK_BOX(box1), text_view, FALSE, FALSE, 0);
+	for (int i = 0; i < N; ++i) {
+		for (int j = 0; j < N; ++j) {
+			int ind = i * N + j;
+			opp_but[ind] = gtk_button_new();
+			gtk_grid_attach(GTK_GRID(grid1), opp_but[ind], i + N + 1, j, 1, 1);
+		}
+	}
 
 	GtkWidget *text = gtk_entry_new();
     gtk_entry_set_max_length(GTK_ENTRY(text), MAKS_DL_TEKSTU);
     gtk_entry_set_text(GTK_ENTRY(text), "");
     g_signal_connect(G_OBJECT(text), "activate",G_CALLBACK(send_move),(gpointer) text);
-    //gtk_grid_attach(GTK_GRID(grid), text, 0, 20, 60, 1);
 	gtk_box_pack_end(GTK_BOX(box1), text, FALSE, FALSE, 0);
-	/*
-	GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_box_pack_start(GTK_BOX(box1), box2, FALSE, FALSE, 0);
-	*/
-	/*
-	GtkWidget *but_refresh = gtk_button_new();//_with_label("Refresh");
-	GtkWidget *imag = gtk_image_new();
-	gtk_image_set_from_icon_name(GTK_IMAGE(imag), "view-refresh", GTK_ICON_SIZE_LARGE_TOOLBAR);
-	gtk_button_set_always_show_image(GTK_BUTTON(but_refresh), TRUE);
-	gtk_button_set_image(GTK_BUTTON(but_refresh), imag);
 
-	g_signal_connect(G_OBJECT(but_refresh), "clicked", G_CALLBACK(refresh), NULL);
-	gtk_box_pack_end(GTK_BOX(box2), but_refresh, FALSE, FALSE, 0);
-	*/
-
-	/*
-	GtkWidget *box3 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_box_pack_start(GTK_BOX(box1), box3, FALSE, FALSE, 0);
-	*/
-
-	// Tu trzeba jakieś cholerstwo do wyświetlania plansz wstawić
 
     g_timeout_add(100,refresh,NULL);
 	gtk_widget_show_all(window);
@@ -116,6 +117,10 @@ static void send_move (GtkWidget *widget, GtkWidget *text)
 	}
 }
 
+static void get_move (GtkWidget *button, char* ind) {
+	printf("Naciśnięty %s\n", ind);
+}
+
 static void incorrectShoot()
 {
     GtkWidget *dialog;
@@ -131,7 +136,12 @@ static gboolean refresh(gpointer data)
 {
 	char msg[5];
 	if (getMessage(pipes, msg)) {
-		printf("Dostałem wiadomość: %s\n", msg);
+		printf("Dostałem wiadomość: %d %d\n", msg[1], msg[2]);
+		if (msg[0] == 's') {
+			// zaznaczanie strzału i wysyłanie feedbacku
+		} else if (msg[0] == 'f') {
+			// aktualizacja
+		}
 	}
 	return TRUE;
 }

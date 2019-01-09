@@ -38,8 +38,8 @@ PipesPtr initPipes(int argc,char *argv[])
         fprintf(stderr,"Memory allocation error\n");
     } else {
         pipes->isA=(argv[1][0] == 'A');
-        pipes->fifo_out = openOutPipe(pipes->isA ? "AtoB" : "BtoA");
-        pipes->fifo_in = openInPipe(pipes->isA ? "BtoA" : "AtoB");
+        pipes->fifo_out = openOutPipe(pipes->isA ? ".AtoB" : ".BtoA");
+        pipes->fifo_in = openInPipe(pipes->isA ? ".BtoA" : ".AtoB");
     }
     return pipes;
 }
