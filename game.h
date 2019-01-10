@@ -1,6 +1,10 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+#ifndef GAME
+#define GAME
+#endif
+
 typedef enum {NOT_SHOOT = 0, MISSED = 6, HIT = 7, UNKNOWN = 8} Status; // 1 - 5 lengths of battleships hit
 
 typedef struct shoot {
@@ -9,7 +13,7 @@ typedef struct shoot {
 
 typedef int Board[10][10]; // to store information about status
 
-void clearBorad(Board b);
+void clearBoard(Board b);
 Shoot makeShoot(int x, int y);
 Shoot makeShootFromStr(char *s);
 bool isCorrect(Shoot s);

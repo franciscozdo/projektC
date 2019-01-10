@@ -29,7 +29,7 @@ bool isCorrect(Shoot s)
 	return s.x < 10 && s.x >= 0 && s.y < 10 && s.y >= 0;
 }	
 
-void clearBorad(Board b)
+void clearBoard(Board b)
 {
 	for (int i = 0; i < 10; ++i) {
 		for (int j = 0; j < 10; ++j) {
