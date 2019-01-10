@@ -1,16 +1,19 @@
 #include <gtk/gtk.h>
 #include "fifo.h"
 #include "msg.h"
-#include "game.h"
+//#include "game.h"
 
 #define MAKS_DL_TEKSTU 3
 #define N 10
+#define S 2 // ile wolnych wierszy przed planszami
 
 static GtkWidget *window;
 static char *my_name, *opponent_name;
 static PipesPtr pipes;
-static GtkWidget *my_but[100], *opp_but[100];
+static GtkWidget *my_but[100], *opp_but[100], *commands;
 static Board my_board, opp_board;
+static char /*mindex[100][4],*/ oindex[100][4];
+static bool my_round;
 
 void pokazBlad(char *komunikat)
 {
@@ -22,9 +25,10 @@ void pokazBlad(char *komunikat)
 }
 
 static void end (GtkWidget *widget, gpointer *data);
-static void send_move (GtkWidget *widget, GtkWidget *data);
-static void get_move (GtkWidget * widget, char* ind);
-static void incorrectShoot();
+//static void send_move (GtkWidget *widget, GtkWidget *data);
+static void get_move (GtkWidget *widget, char* ind);
+static void change_button (GtkWidget *widget, int status);
+//static void incorrectShoot();
 static gboolean refresh(gpointer data);
 
 int main(int argc, char **argv) {
@@ -33,8 +37,10 @@ int main(int argc, char **argv) {
         return 1;
     if (argc == 2 && strcmp(argv[1],"A") == 0) {
 		my_name = "A"; opponent_name = "B";
+        my_round = true;
 	} else {
 		my_name = "B"; opponent_name = "A";
+        my_round = false;
 	}
 
 	clearBoard(my_board);
@@ -48,37 +54,79 @@ int main(int argc, char **argv) {
 	gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(end), NULL);
 
-	GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	gtk_container_add(GTK_CONTAINER(window), box1);
-
+	
 	GtkWidget *grid1 = gtk_grid_new();
-	gtk_box_pack_start(GTK_BOX(box1), grid1, FALSE, FALSE, 0);
+	//gtk_widget_set_margin_end(box1, 5);
+	//gtk_box_pack_start(GTK_BOX(box1), grid1, FALSE, FALSE, 0);
+	gtk_container_add(GTK_CONTAINER(window), grid1);
+
+    commands = gtk_label_new(NULL);
+    gtk_label_set_text(GTK_LABEL(commands), "");
+    
+    GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	//gtk_container_add(GTK_CONTAINER(window), box1);
+    gtk_grid_attach(GTK_GRID(grid1), box1, 0, 1, 21, 1);
+
+    commands = gtk_label_new(NULL);
+    gtk_label_set_text(GTK_LABEL(commands), "");
+	gtk_box_pack_start(GTK_BOX(box1), commands, FALSE, FALSE, 0);
+    //gtk_grid_attach(GTK_GRID(grid1), commands, 5, 0, 11, 1);
+
+	for (int i = 0; i < N; ++i) {
+		GtkWidget *rowname = gtk_label_new(NULL);
+		char tekst[2];
+		sprintf(tekst, "%d", i + 1);
+		gtk_label_set_text(GTK_LABEL(rowname), (gchar*) tekst);
+		gtk_grid_attach(GTK_GRID(grid1), rowname, i, S, 1, 1);
+	}
+	
+	for (int i = 0; i < N; ++i) {
+		GtkWidget *rowname = gtk_label_new(NULL);
+		char tekst[2];
+		sprintf(tekst, "%d", i + 1);
+		gtk_label_set_text(GTK_LABEL(rowname), (gchar*) tekst);
+		gtk_grid_attach(GTK_GRID(grid1), rowname, i + N + 1, S, 1, 1);
+	}
+
 	for (int i = 0; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
 			int ind = i * N + j;
 			my_but[ind] = gtk_button_new();
-			char index[3];
-			sprintf(index, "%d%d", i, j);
-			g_signal_connect(G_OBJECT(my_but[ind]), "clicked", G_CALLBACK(get_move), index);
-			gtk_grid_attach(GTK_GRID(grid1), my_but[ind], i, j, 1, 1);
+			//sprintf(mindex[ind], "m%d%d", i, j);
+			//printf("%s ", mindex[ind]);
+			//g_signal_connect(G_OBJECT(my_but[ind]), "clicked", G_CALLBACK(get_move), mindex[ind]);
+			gtk_grid_attach(GTK_GRID(grid1), my_but[ind], i, j + 1 + S, 1, 1);
 		}
 	}
-	GtkWidget *separator = gtk_button_new();
-	gtk_grid_attach(GTK_GRID(grid1), separator, N, 0, 1, 10);
+	for (int i = 0; i < N; ++i) {
+		GtkWidget *rowname = gtk_label_new(NULL);
+		char tekst[8];
+		sprintf(tekst, "   %c   ", 'A' + i);
+		gtk_label_set_text(GTK_LABEL(rowname), (gchar*) tekst);
+		gtk_grid_attach(GTK_GRID(grid1), rowname, N, i + 1 + S, 1, 1);
+	}
+
+	//GtkWidget *separator = gtk_button_new();
+	//gtk_grid_attach(GTK_GRID(grid1), separator, N, 0, 1, 10);
 
 	for (int i = 0; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
 			int ind = i * N + j;
 			opp_but[ind] = gtk_button_new();
-			gtk_grid_attach(GTK_GRID(grid1), opp_but[ind], i + N + 1, j, 1, 1);
+			sprintf(oindex[ind], "%d%d", i, j);
+			//printf("%s ", oindex[ind]);
+			g_signal_connect(G_OBJECT(opp_but[ind]), "clicked", G_CALLBACK(get_move), oindex[ind]);
+
+			gtk_grid_attach(GTK_GRID(grid1), opp_but[ind], i + N + 1, j + 1 + S, 1, 1);
 		}
 	}
 
-	GtkWidget *text = gtk_entry_new();
-    gtk_entry_set_max_length(GTK_ENTRY(text), MAKS_DL_TEKSTU);
-    gtk_entry_set_text(GTK_ENTRY(text), "");
-    g_signal_connect(G_OBJECT(text), "activate",G_CALLBACK(send_move),(gpointer) text);
-	gtk_box_pack_end(GTK_BOX(box1), text, FALSE, FALSE, 0);
+	//GtkWidget *text = gtk_entry_new();
+    //gtk_entry_set_max_length(GTK_ENTRY(text), MAKS_DL_TEKSTU);
+    //gtk_entry_set_text(GTK_ENTRY(text), "");
+    //g_signal_connect(G_OBJECT(text), "activate",G_CALLBACK(send_move),(gpointer) text);
+	//gtk_grid_attach(GTK_GRID(grid1), text, 5, N + 1, 11, 1);
+	//gtk_box_pack_end(GTK_BOX(box1), text, FALSE, FALSE, 0);
 
 
     g_timeout_add(100,refresh,NULL);
@@ -95,32 +143,53 @@ static void end (GtkWidget *widget, gpointer *data)
 	gtk_main_quit();
 }
 
+/*
 static void send_move (GtkWidget *widget, GtkWidget *text)
 {
 	gchar in[MAKS_DL_TEKSTU];
 	strcpy(in, gtk_entry_get_text( GTK_ENTRY(text)));
 	gtk_entry_set_text( GTK_ENTRY(text), "");
 	printf("%d%d%d %c%c%c\n", in[0], in[1], in[2], in[0], in[1], in[2]);
-	/*
+	/ *
 	in[2] = 'a';
 	int x = in[0] - 'A';
 	int y = in[1] - '0' - 1; // -1 bo numerujemy od 0 a użytkownik wpisuje od 1
 	if (isdigit(in[2]))		// <-----------------------To chyba nie działa bo nie czyta 10 :(
 		y = y * 10 + in[2] - '0' - 1;
-	*/
+	* /
 	Shoot s = makeShootFromStr(in);
 	if (!isCorrect(s)) {
-		incorrectShoot();
+		pokazBlad("Niepoprawny starzal.\n");//incorrectShoot();
 	} else{
 		sendMove(pipes, s);	
 		printf ("Wysłałem: %d %d\n", s.x, s.y);
 	}
 }
+*/
 
 static void get_move (GtkWidget *button, char* ind) {
-	printf("Naciśnięty %s\n", ind);
+	//printf("Naciśnięty %s\n", ind);
+    if (!my_round) {
+        gtk_label_set_text(GTK_LABEL(commands), "Nie Twoja runda.");
+        return;
+    }
+    Shoot s = makeShoot(ind[0] - '0', ind[1] - '0');
+    if (checkOnBoard(s, opp_board) == NOT_SHOOT){
+        sendMove(pipes, s);
+        markOnBoard(s, opp_board, UNKNOWN);
+        int ind = s.x * N + s.y;
+        change_button(opp_but[ind], 1);
+        my_round = false;
+        gtk_label_set_text(GTK_LABEL(commands), "");
+        printf("Wysłałem %d %d\n", s.x, s.y);
+    } else {
+        gtk_label_set_text(GTK_LABEL(commands), "W to pole już strzelałeś!");
+        //pokazBlad("Jesteś DZBANEM!\n");
+        //printf("już był strzelony\n");
+    }
 }
 
+/*
 static void incorrectShoot()
 {
     GtkWidget *dialog;
@@ -131,6 +200,14 @@ static void incorrectShoot()
     gtk_widget_destroy (dialog);
 
 }
+*/
+
+static void change_button(GtkWidget *button, int stat) 
+{
+    char t[2];
+    sprintf(t, "x");
+    gtk_button_set_label(GTK_BUTTON(button), t);
+}
 
 static gboolean refresh(gpointer data)
 {
@@ -138,6 +215,11 @@ static gboolean refresh(gpointer data)
 	if (getMessage(pipes, msg)) {
 		printf("Dostałem wiadomość: %d %d\n", msg[1], msg[2]);
 		if (msg[0] == 's') {
+            int ind = (msg[1]) * N + (msg[2]);
+            printf("%d\n", ind);
+            change_button(my_but[ind], 1);
+            my_round = true;
+            gtk_label_set_text(GTK_LABEL(commands), "Twoja kolej!");
 			// zaznaczanie strzału i wysyłanie feedbacku
 		} else if (msg[0] == 'f') {
 			// aktualizacja
@@ -145,4 +227,3 @@ static gboolean refresh(gpointer data)
 	}
 	return TRUE;
 }
-
