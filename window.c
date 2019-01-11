@@ -1,7 +1,8 @@
 #include <gtk/gtk.h>
 #include "fifo.h"
 #include "msg.h"
-//#include "game.h"
+#include "boards.h"
+#include "game.h"
 
 #define MAKS_DL_TEKSTU 3
 #define N 10
@@ -10,7 +11,7 @@
 static GtkWidget *window;
 static char *my_name, *opponent_name;
 static PipesPtr pipes;
-static GtkWidget *my_but[100], *opp_but[100], *commands;
+static GtkWidget *my_but[100], *opp_but[100], *messages;
 static Board my_board, opp_board;
 static char /*mindex[100][4],*/ oindex[100][4];
 static bool my_round;
@@ -43,7 +44,7 @@ int main(int argc, char **argv) {
         my_round = false;
 	}
 
-	clearBoard(my_board);
+	getBoard(my_board);
 	clearBoard(opp_board);
 
 	gtk_init(&argc, &argv);
@@ -60,17 +61,21 @@ int main(int argc, char **argv) {
 	//gtk_box_pack_start(GTK_BOX(box1), grid1, FALSE, FALSE, 0);
 	gtk_container_add(GTK_CONTAINER(window), grid1);
 
-    commands = gtk_label_new(NULL);
-    gtk_label_set_text(GTK_LABEL(commands), "");
+    messages = gtk_label_new(NULL);
+    gtk_label_set_text(GTK_LABEL(messages), "");
     
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	//gtk_container_add(GTK_CONTAINER(window), box1);
     gtk_grid_attach(GTK_GRID(grid1), box1, 0, 1, 21, 1);
 
-    commands = gtk_label_new(NULL);
-    gtk_label_set_text(GTK_LABEL(commands), "");
-	gtk_box_pack_start(GTK_BOX(box1), commands, FALSE, FALSE, 0);
-    //gtk_grid_attach(GTK_GRID(grid1), commands, 5, 0, 11, 1);
+    // To display messages from application
+
+    messages = gtk_label_new(NULL);
+    gtk_label_set_text(GTK_LABEL(messages), "");
+	gtk_box_pack_start(GTK_BOX(box1), messages, FALSE, FALSE, 0);
+    //gtk_grid_attach(GTK_GRID(grid1), messages, 5, 0, 11, 1);
+
+    // Building boards
 
 	for (int i = 0; i < N; ++i) {
 		GtkWidget *rowname = gtk_label_new(NULL);
@@ -92,6 +97,7 @@ int main(int argc, char **argv) {
 		for (int j = 0; j < N; ++j) {
 			int ind = i * N + j;
 			my_but[ind] = gtk_button_new();
+            gtk_button_set_label(GTK_BUTTON(my_but[ind]), (my_board[i][j] == 0) ? "." : "X");
 			//sprintf(mindex[ind], "m%d%d", i, j);
 			//printf("%s ", mindex[ind]);
 			//g_signal_connect(G_OBJECT(my_but[ind]), "clicked", G_CALLBACK(get_move), mindex[ind]);
@@ -114,7 +120,8 @@ int main(int argc, char **argv) {
 			int ind = i * N + j;
 			opp_but[ind] = gtk_button_new();
 			sprintf(oindex[ind], "%d%d", i, j);
-			//printf("%s ", oindex[ind]);
+	        gtk_button_set_label(GTK_BUTTON(opp_but[ind]), ".");
+            //printf("%s ", oindex[ind]);
 			g_signal_connect(G_OBJECT(opp_but[ind]), "clicked", G_CALLBACK(get_move), oindex[ind]);
 
 			gtk_grid_attach(GTK_GRID(grid1), opp_but[ind], i + N + 1, j + 1 + S, 1, 1);
@@ -169,21 +176,22 @@ static void send_move (GtkWidget *widget, GtkWidget *text)
 
 static void get_move (GtkWidget *button, char* ind) {
 	//printf("Naciśnięty %s\n", ind);
-    if (!my_round) {
-        gtk_label_set_text(GTK_LABEL(commands), "Nie Twoja runda.");
+    if (false && !my_round) {
+        gtk_label_set_text(GTK_LABEL(messages), "Nie Twoja runda.");
         return;
     }
     Shoot s = makeShoot(ind[0] - '0', ind[1] - '0');
     if (checkOnBoard(s, opp_board) == NOT_SHOOT){
+        // Sending shoot and marking on board
         sendMove(pipes, s);
         markOnBoard(s, opp_board, UNKNOWN);
         int ind = s.x * N + s.y;
         change_button(opp_but[ind], 1);
         my_round = false;
-        gtk_label_set_text(GTK_LABEL(commands), "");
-        printf("Wysłałem %d %d\n", s.x, s.y);
+        gtk_label_set_text(GTK_LABEL(messages), "");
+        //printf("Wysłałem %d %d\n", s.x, s.y);
     } else {
-        gtk_label_set_text(GTK_LABEL(commands), "W to pole już strzelałeś!");
+        gtk_label_set_text(GTK_LABEL(messages), "W to pole już strzelałeś!");
         //pokazBlad("Jesteś DZBANEM!\n");
         //printf("już był strzelony\n");
     }
@@ -205,7 +213,7 @@ static void incorrectShoot()
 static void change_button(GtkWidget *button, int stat) 
 {
     char t[2];
-    sprintf(t, "x");
+    sprintf(t, (stat == HIT) ? "T" : "P");
     gtk_button_set_label(GTK_BUTTON(button), t);
 }
 
@@ -213,16 +221,29 @@ static gboolean refresh(gpointer data)
 {
 	char msg[5];
 	if (getMessage(pipes, msg)) {
-		printf("Dostałem wiadomość: %d %d\n", msg[1], msg[2]);
+		//printf("Dostałem wiadomość: %d %d\n", msg[1], msg[2]);
 		if (msg[0] == 's') {
+            // Sending feedback and marking shoot on board
             int ind = (msg[1]) * N + (msg[2]);
-            printf("%d\n", ind);
-            change_button(my_but[ind], 1);
+            //printf("%d\n", ind);
+            
+            Shoot s = makeShoot(msg[1], msg[2]);
+            Status stat = checkOnBoard(s, my_board);
+            stat = (stat > 0 && stat <= 5) ? HIT : MISSED;
+            change_button(my_but[ind], stat);
+            sendFeedback(pipes, s, stat);
+
             my_round = true;
-            gtk_label_set_text(GTK_LABEL(commands), "Twoja kolej!");
-			// zaznaczanie strzału i wysyłanie feedbacku
+            gtk_label_set_text(GTK_LABEL(messages), "Twoja kolej!");
 		} else if (msg[0] == 'f') {
-			// aktualizacja
+			// Reading feedback and marking it on board etc.
+            int ind = msg[1] * N + msg[2];
+            //printf("Dostałem %c %d %d %d\n", msg[0], msg[1], msg[2], msg[3]);
+
+            Shoot s = makeShoot(msg[1], msg[2]);
+            Status stat = msg[3];
+            change_button(opp_but[ind], stat);
+            markOnBoard(s, opp_board, stat);
 		}
 	}
 	return TRUE;
