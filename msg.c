@@ -17,8 +17,8 @@ void sendFeedback(PipesPtr pipes, Shoot s, Status stat)
 {
 	char msg[5];
 	msg[0] = 'f'; // wysyłam wiadomość zwrotną
-	msg[1] = s.x;
-	msg[2] = s.x;
+	msg[1] = s.x + 'A';
+	msg[2] = s.y + 'A';
 	msg[3] = stat;
 	msg[4] = '\0'; //chyba nie będzie potrzebne,bo będziemy od razu wiedzieć którą wiadomość dostajemy
 	
