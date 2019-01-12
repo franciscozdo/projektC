@@ -1,5 +1,13 @@
 #include "game.h"
 
+static int dir[8] = {1, 0, -1, 0, 0, 1, 0, -1}; // directions for dfs in isSunk()
+
+// cheks if coordinates are in board (in range [0, 10])
+static bool inBoard(Shoot s) 
+{
+    return s.x < 10 && s.x >= 0 && s.y < 10 && s.y >= 0;
+}
+
 Shoot makeShoot(int a, int b)
 {
 	Shoot s;
@@ -8,7 +16,7 @@ Shoot makeShoot(int a, int b)
 	return s;
 }
 
-Shoot makeShootFromStr(char *s) 
+/*Shoot makeShootFromStr(char *s) 
 {
 	int x;
 	if (islower(s[0])) 
@@ -22,12 +30,12 @@ Shoot makeShootFromStr(char *s)
 	}
 	y--; // Bo numeruję od zera
 	return makeShoot(x, y);
-}
+}*/
 
-bool isCorrect(Shoot s) 
+/*bool isCorrect(Shoot s) 
 {
 	return s.x < 10 && s.x >= 0 && s.y < 10 && s.y >= 0;
-}	
+}*/	
 
 void clearBoard(Board b)
 {
@@ -38,10 +46,10 @@ void clearBoard(Board b)
 	}
 }
 
-bool checkShoot(Shoot s, Board b)
+/*bool checkShoot(Shoot s, Board b)
 {
 	return b[s.x][s.y] == 0;
-}
+}*/
 
 void markOnBoard(Shoot s, Board b, Status stat)
 {
@@ -51,4 +59,40 @@ void markOnBoard(Shoot s, Board b, Status stat)
 int checkOnBoard(Shoot s, Board b)
 {
 	return b[s.x][s.y];
+}
+
+bool isSunk(Shoot s, Board b, bool vis[10][10])
+{
+    Status stat = checkOnBoard(s, b);
+    //printf("spr %d %d - stat %d\n", s.x, s.y, stat);
+    if (stat == SHIP)
+        return false;
+    //if (stat == MISSED || stat == NOT_SHOOT)
+    //    return true;
+    bool cond = true;
+    vis[s.x][s.y] = true;
+    for (int i = 0; i < 4; ++i) {
+        Shoot ns = makeShoot(s.x + dir[2 * i], s.y + dir[2 * i + 1]);
+        if (inBoard(ns) && !vis[ns.x][ns.y] && (
+                    checkOnBoard(ns, b) == SHIP || checkOnBoard(ns, b) == HIT 
+                    || checkOnBoard(ns, b) == MY_HIT))
+            cond &= isSunk(ns, b, vis);
+    }
+    return cond;
+}
+
+int markSunk(Shoot s, Board b)
+{
+    if (checkOnBoard(s, b) != MY_HIT && checkOnBoard(s, b) != HIT)
+        return 0;
+    //printf("s%d\n", checkOnBoard(s, b));
+    markOnBoard(s, b, SUNK);
+    int n = 1; // counting actual place
+    for (int i = 0; i < 4; ++i) {
+        Shoot ns = makeShoot(s.x + dir[2 * i], s.y + dir[2 * i + 1]);
+        //printf("ns%d\n", checkOnBoard(ns, b));
+        if (inBoard(ns) && (checkOnBoard(ns, b) == MY_HIT || checkOnBoard(ns, b) == HIT))
+            n += markSunk(ns, b);
+    }  
+    return n;
 }

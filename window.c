@@ -27,8 +27,8 @@ void pokazBlad(char *komunikat)
 
 static void end (GtkWidget *widget, gpointer *data);
 //static void send_move (GtkWidget *widget, GtkWidget *data);
-static void get_move (GtkWidget *widget, char* ind);
-static void change_button (GtkWidget *widget, int status);
+static void getMove (GtkWidget *widget, char* ind);
+static void changeButton (GtkWidget *widget, int status);
 //static void incorrectShoot();
 static gboolean refresh(gpointer data);
 
@@ -97,10 +97,11 @@ int main(int argc, char **argv) {
 		for (int j = 0; j < N; ++j) {
 			int ind = i * N + j;
 			my_but[ind] = gtk_button_new();
-            gtk_button_set_label(GTK_BUTTON(my_but[ind]), (my_board[i][j] == 0) ? "." : "X");
+            changeButton(my_but[ind], my_board[i][j]);
+            //gtk_button_set_label(GTK_BUTTON(my_but[ind]), (my_board[i][j] == 0) ? "." : "X");
 			//sprintf(mindex[ind], "m%d%d", i, j);
 			//printf("%s ", mindex[ind]);
-			//g_signal_connect(G_OBJECT(my_but[ind]), "clicked", G_CALLBACK(get_move), mindex[ind]);
+			//g_signal_connect(G_OBJECT(my_but[ind]), "clicked", G_CALLBACK(getMove), mindex[ind]);
 			gtk_grid_attach(GTK_GRID(grid1), my_but[ind], i, j + 1 + S, 1, 1);
 		}
 	}
@@ -114,15 +115,16 @@ int main(int argc, char **argv) {
 
 	//GtkWidget *separator = gtk_button_new();
 	//gtk_grid_attach(GTK_GRID(grid1), separator, N, 0, 1, 10);
-
-	for (int i = 0; i < N; ++i) {
+	
+    for (int i = 0; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
 			int ind = i * N + j;
 			opp_but[ind] = gtk_button_new();
 			sprintf(oindex[ind], "%d%d", i, j);
-	        gtk_button_set_label(GTK_BUTTON(opp_but[ind]), ".");
+	        changeButton(opp_but[ind], NOT_SHOOT);
+            //gtk_button_set_label(GTK_BUTTON(opp_but[ind]), ".");
             //printf("%s ", oindex[ind]);
-			g_signal_connect(G_OBJECT(opp_but[ind]), "clicked", G_CALLBACK(get_move), oindex[ind]);
+			g_signal_connect(G_OBJECT(opp_but[ind]), "clicked", G_CALLBACK(getMove), oindex[ind]);
 
 			gtk_grid_attach(GTK_GRID(grid1), opp_but[ind], i + N + 1, j + 1 + S, 1, 1);
 		}
@@ -174,7 +176,7 @@ static void send_move (GtkWidget *widget, GtkWidget *text)
 }
 */
 
-static void get_move (GtkWidget *button, char* ind) {
+static void getMove (GtkWidget *button, char* ind) {
 	//printf("Naciśnięty %s\n", ind);
     if (false && !my_round) {
         gtk_label_set_text(GTK_LABEL(messages), "Nie Twoja runda.");
@@ -186,7 +188,7 @@ static void get_move (GtkWidget *button, char* ind) {
         sendMove(pipes, s);
         markOnBoard(s, opp_board, UNKNOWN);
         int ind = s.x * N + s.y;
-        change_button(opp_but[ind], 1);
+        changeButton(opp_but[ind], 1);
         my_round = false;
         gtk_label_set_text(GTK_LABEL(messages), "");
         //printf("Wysłałem %d %d\n", s.x, s.y);
@@ -210,11 +212,40 @@ static void incorrectShoot()
 }
 */
 
-static void change_button(GtkWidget *button, int stat) 
+static void changeButton(GtkWidget *button, int stat) 
 {
+    //printf("%d ", stat);
+    //if(stat == NOT_SHOOT) return;
     char t[2];
-    sprintf(t, (stat == HIT) ? "T" : "P");
+    if (stat == HIT)
+        sprintf(t, "T");
+    else if (stat == SUNK)
+        sprintf(t, "Z");
+    else if (stat == MISSED)
+        sprintf(t, "P");
+    else if (stat == UNKNOWN)
+        sprintf(t, "U");
+    else if (stat == MY_HIT)
+        sprintf(t, "T");
+    else if (stat == SHIP)
+        sprintf(t, "X");
+    else if (stat == NOT_SHOOT)
+        sprintf(t, ".");
+
     gtk_button_set_label(GTK_BUTTON(button), t);
+}
+
+static void updateBoard(char c)
+{
+    if (c == 'm') {
+        for (int i = 0; i < 100; ++i) {
+            changeButton (my_but[i], my_board[i/10][i%10]);
+        }
+    } else {
+        for (int i = 0; i < 100; ++i) {
+            changeButton (opp_but[i], opp_board[i/10][i%10]);
+        }
+    }
 }
 
 static gboolean refresh(gpointer data)
@@ -224,26 +255,57 @@ static gboolean refresh(gpointer data)
 		//printf("Dostałem wiadomość: %d %d\n", msg[1], msg[2]);
 		if (msg[0] == 's') {
             // Sending feedback and marking shoot on board
-            int ind = (msg[1]) * N + (msg[2]);
             //printf("%d\n", ind);
             
             Shoot s = makeShoot(msg[1], msg[2]);
-            Status stat = checkOnBoard(s, my_board);
-            stat = (stat > 0 && stat <= 5) ? HIT : MISSED;
-            change_button(my_but[ind], stat);
+            int ind = s.x * N + s.y;
+            Status stat = checkOnBoard(s, my_board) == SHIP ? HIT : MISSED;
+            //stat = (stat > 0 && stat <= 5) ? HIT : MISSED;
+            markOnBoard(s, my_board, stat == HIT ? MY_HIT : MISSED);
+            
+            bool vis[10][10];
+            int size_of_ship = 0;
+            for (int i = 0; i < 100; ++i) vis[i/10][i%10] = false;
+            
+            if (stat == HIT && isSunk(s, my_board, vis)) {
+                size_of_ship = markSunk(s, my_board);
+                //printf("%s:%d\n",my_name,size_of_ship);
+                stat = SUNK;
+                updateBoard('m');
+            } else {
+                changeButton(my_but[ind], stat);
+            }
+            //printf("%sw%d\n",my_name, stat);
             sendFeedback(pipes, s, stat);
 
             my_round = true;
             gtk_label_set_text(GTK_LABEL(messages), "Twoja kolej!");
 		} else if (msg[0] == 'f') {
 			// Reading feedback and marking it on board etc.
-            int ind = msg[1] * N + msg[2];
             //printf("Dostałem %c %d %d %d\n", msg[0], msg[1], msg[2], msg[3]);
 
             Shoot s = makeShoot(msg[1], msg[2]);
+            int ind = s.x * N + s.y;
             Status stat = msg[3];
-            change_button(opp_but[ind], stat);
-            markOnBoard(s, opp_board, stat);
+            //stat = (stat > 0 && stat <= 5) ? HIT : MISSED;
+            //printf("%sd%d\n", my_name, stat);
+            int size_of_ship = 0;
+            
+            if (stat == SUNK) {
+                markOnBoard(s, opp_board, HIT);
+                size_of_ship = markSunk(s, opp_board);
+                //printf("%s: %d\n", my_name, size_of_ship);
+                stat = SUNK;
+                updateBoard('o');
+
+            } else {
+                markOnBoard(s, opp_board, stat);
+                changeButton(opp_but[ind], stat);
+            }
+            /*Shoot s = makeShoot(msg[1], msg[2]);
+            Status stat = msg[3];
+            changeButton(opp_but[ind], stat);
+            markOnBoard(s, opp_board, stat);*/
 		}
 	}
 	return TRUE;

@@ -21,5 +21,7 @@ bool isCorrect(Shoot s);
 //bool checkShoot(Shoot s, Board b); // checks if it's a proper move
 void markOnBoard(Shoot s, Board b, Status stat);
 int checkOnBoard(Shoot s, Board b);
+bool isSunk(Shoot s, Board b, bool vis[10][10]);
+int markSunk(Shoot s, Board b); // returns number of changed boxes
 
 #endif
