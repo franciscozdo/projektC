@@ -9,12 +9,14 @@
 #define S 2 // ile wolnych wierszy przed planszami
 
 static GtkWidget *window;
-static char *my_name, *opponent_name;
+static char *my_name, *opp_name;
 static PipesPtr pipes;
 static GtkWidget *my_but[100], *opp_but[100], *messages;
 static Board my_board, opp_board;
 static char /*mindex[100][4],*/ oindex[100][4];
 static bool my_round;
+static Ships my_ships, opp_ships;
+static int longest_ship;
 
 void pokazBlad(char *komunikat)
 {
@@ -30,21 +32,23 @@ static void end (GtkWidget *widget, gpointer *data);
 static void getMove (GtkWidget *widget, char* ind);
 static void changeButton (GtkWidget *widget, int status);
 //static void incorrectShoot();
-static gboolean refresh(gpointer data);
+static gboolean refresh (gpointer data);
+static void epilog (bool ifWin);
 
 int main(int argc, char **argv) {
 
 	if ((pipes = initPipes(argc,argv)) == NULL)
         return 1;
     if (argc == 2 && strcmp(argv[1],"A") == 0) {
-		my_name = "A"; opponent_name = "B";
+		my_name = "A"; opp_name = "B";
         my_round = true;
 	} else {
-		my_name = "B"; opponent_name = "A";
+		my_name = "B"; opp_name = "A";
         my_round = false;
 	}
 
-	getBoard(my_board);
+	randBoard(my_board, my_ships, &longest_ship, my_name[0]);
+    for (int i = 0; i < 10; ++i) opp_ships[i] = my_ships[i];
 	clearBoard(opp_board);
 
 	gtk_init(&argc, &argv);
@@ -178,7 +182,7 @@ static void send_move (GtkWidget *widget, GtkWidget *text)
 
 static void getMove (GtkWidget *button, char* ind) {
 	//printf("Naciśnięty %s\n", ind);
-    if (false && !my_round) {
+    if (!my_round) {
         gtk_label_set_text(GTK_LABEL(messages), "Nie Twoja runda.");
         return;
     }
@@ -188,7 +192,7 @@ static void getMove (GtkWidget *button, char* ind) {
         sendMove(pipes, s);
         markOnBoard(s, opp_board, UNKNOWN);
         int ind = s.x * N + s.y;
-        changeButton(opp_but[ind], 1);
+        changeButton(opp_but[ind], UNKNOWN);
         my_round = false;
         gtk_label_set_text(GTK_LABEL(messages), "");
         //printf("Wysłałem %d %d\n", s.x, s.y);
@@ -272,12 +276,19 @@ static gboolean refresh(gpointer data)
                 //printf("%s:%d\n",my_name,size_of_ship);
                 stat = SUNK;
                 updateBoard('m');
+                --my_ships[size_of_ship];
+                
             } else {
                 changeButton(my_but[ind], stat);
             }
             //printf("%sw%d\n",my_name, stat);
             sendFeedback(pipes, s, stat);
-
+            if (my_ships[size_of_ship] == 0) {
+                if (allSunk(my_ships, longest_ship)) {
+                    epilog(false); // you loose
+                    //end();
+                }
+            }
             my_round = true;
             gtk_label_set_text(GTK_LABEL(messages), "Twoja kolej!");
 		} else if (msg[0] == 'f') {
@@ -297,7 +308,13 @@ static gboolean refresh(gpointer data)
                 //printf("%s: %d\n", my_name, size_of_ship);
                 stat = SUNK;
                 updateBoard('o');
-
+                --opp_ships[size_of_ship];
+                if (opp_ships[size_of_ship] == 0) {
+                    if (allSunk(opp_ships, longest_ship)) {
+                        epilog(true);
+                        //end();
+                    }
+                }   
             } else {
                 markOnBoard(s, opp_board, stat);
                 changeButton(opp_but[ind], stat);
@@ -309,4 +326,17 @@ static gboolean refresh(gpointer data)
 		}
 	}
 	return TRUE;
+}
+
+static void epilog (bool win)
+{
+    char alert[100];
+    if (win) {
+        sprintf(alert, "Wygrałeś.\n Zestrzeliłeś wszystkie statki gracza %s\n", opp_name);
+        pokazBlad(alert);
+    } else {
+        sprintf(alert, "Przegrałeś.\n Gracz %s zestrzelił Ci wszystkie statki.\n", opp_name);
+        pokazBlad(alert);
+    }
+    end(NULL, NULL);
 }

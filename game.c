@@ -96,3 +96,13 @@ int markSunk(Shoot s, Board b)
     }  
     return n;
 }
+
+bool allSunk(Ships ships, int n)
+{
+    for (int i = 0; i <= n; ++i) {
+        //printf("[s%d - %d]", i, ships[i]);
+        if (ships[i] != 0){//puts("");
+            return false;}
+    }//puts("");
+    return true;
+}

@@ -13,6 +13,7 @@ typedef struct shoot {
 } Shoot;
 
 typedef int Board[10][10]; // to store information about status
+typedef int Ships[10]; // to store how many ships of specified length you have
 
 void clearBoard(Board b);
 Shoot makeShoot(int x, int y);
@@ -23,5 +24,6 @@ void markOnBoard(Shoot s, Board b, Status stat);
 int checkOnBoard(Shoot s, Board b);
 bool isSunk(Shoot s, Board b, bool vis[10][10]);
 int markSunk(Shoot s, Board b); // returns number of changed boxes
+bool allSunk(Ships ships, int n); // n - number of lengths of ships
 
 #endif
