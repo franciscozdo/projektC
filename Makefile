@@ -20,6 +20,8 @@ window.o: window.c $(DEPS)
 %.o: %.c $(DEPS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+clean:
+	rm -f $(OBJ) $(NAME)
 
 #game.o: game.c
 #	$(CC) $(CFLAGS) -c -o $@ $<

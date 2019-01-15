@@ -46,10 +46,11 @@ void clearBoard(Board b)
 	}
 }
 
-/*bool checkShoot(Shoot s, Board b)
+void copyBoard(Board b1, Board b2)
 {
-	return b[s.x][s.y] == 0;
-}*/
+    for (int i = 0; i < 100; ++i)
+        b1[i/10][i%10] = b2[i/10][i%10];
+}
 
 void markOnBoard(Shoot s, Board b, Status stat)
 {

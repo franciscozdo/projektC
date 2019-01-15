@@ -25,5 +25,6 @@ int checkOnBoard(Shoot s, Board b);
 bool isSunk(Shoot s, Board b, bool vis[10][10]);
 int markSunk(Shoot s, Board b); // returns number of changed boxes
 bool allSunk(Ships ships, int n); // n - number of lengths of ships
+void copyBoard(Board b1, Board b2);
 
 #endif

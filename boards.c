@@ -101,7 +101,31 @@
 				}};
 //int *(p[10][10])[9] = {p1, p2, p3, p4, p5, p6, p7, p8, p9};
 */
-
+static bool place (Board b, int s, int ind, int orientation)
+{
+    int x = ind % 10;
+    int y = ind / 10;
+    if (orientation == 1) {
+        if (x + s > 10) return false;
+        for (int i = 0; i < s; ++i) {
+            if (b[x + i][y] != 0 || b[x + i + 1][y] == 1 || b[x + i - 1][y] == 1 || b[x + i][y + 1] == 1 || b[x + i][y - 1] == 1 || 
+                    b[x + i + 1][y + 1] == 1 ||b[x + i + 1][y - 1] == 1 ||b[x + i - 1][y + 1] == 1 ||b[x + i - 1][y - 1] == 1)
+                return false;
+        }
+        for (int i = 0; i < s; ++i) 
+            b[x + i][y] = 1;
+    } else {
+        if (y + s > 10) return false;
+        for (int i = 0; i < s; ++i) {
+            if (b[x][y + i] != 0 || b[x + 1][y + i] == 1 || b[x - 1][y + i] == 1 || b[x][y  + i + 1] == 1 || b[x][y + i - 1] == 1 ||
+                     b[x + 1][y + i + 1] == 1 || b[x - 1][y + i + 1] == 1 || b[x + 1][y  + i - 1] == 1 || b[x - 1][y + i - 1] == 1)
+                return false;
+        }
+        for (int i = 0; i < s; ++i) 
+            b[x][y + i] = 1;
+    }
+    return true;
+}
 // W grze nie jest za dużo statków więc jest bardzo mała szansa na to
 // że funkcja nigdy się nie skończy wykonywać
 // (gdy nie ma możliwości położenia jakiegoś statku na planszy po prostu
@@ -132,31 +156,7 @@ void genBoard(Board b, Ships s, int longest, char name)
     }
 }
 
-static bool place (Board b, int s, int ind, int orientation)
-{
-    int x = ind % 10;
-    int y = ind / 10;
-    if (orientation == 1) {
-        if (x + s > 10) return false;
-        for (int i = 0; i < s; ++i) {
-            if (b[x + i][y] != 0 || b[x + i + 1][y] == 1 || b[x + i - 1][y] == 1 || b[x + i][y + 1] == 1 || b[x + i][y - 1] == 1 || 
-                    b[x + i + 1][y + 1] == 1 ||b[x + i + 1][y - 1] == 1 ||b[x + i - 1][y + 1] == 1 ||b[x + i - 1][y - 1] == 1)
-                return false;
-        }
-        for (int i = 0; i < s; ++i) 
-            b[x + i][y] = 1;
-    } else {
-        if (y + s > 10) return false;
-        for (int i = 0; i < s; ++i) {
-            if (b[x][y + i] != 0 || b[x + 1][y + i] == 1 || b[x - 1][y + i] == 1 || b[x][y  + i + 1] == 1 || b[x][y + i - 1] == 1 ||
-                     b[x + 1][y + i + 1] == 1 || b[x - 1][y + i + 1] == 1 || b[x + 1][y  + i - 1] == 1 || b[x - 1][y + i - 1] == 1)
-                return false;
-        }
-        for (int i = 0; i < s; ++i) 
-            b[x][y + i] = 1;
-    }
-    return true;
-}
+
 /*
 void getBoard(Board b, int counter[], int *longest) 
 {
