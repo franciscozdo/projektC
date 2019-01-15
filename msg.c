@@ -38,3 +38,12 @@ bool getMessage(PipesPtr pipes, char *msg)
 	}
 	return false;
 }
+
+void sendSignal(PipesPtr pipes, int signal)
+{
+    if (signal == 1) {
+        sendStringToPipe(pipes, "nxxx");
+    } else {
+        sendStringToPipe(pipes, "gxxx");
+    }
+}

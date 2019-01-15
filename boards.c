@@ -1,6 +1,6 @@
 #include "boards.h"
 
-int p[9][10][10] ={{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+/*int p[9][10][10] ={{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 				 {0, 1, 1, 1, 1, 1, 0, 0, 1, 0},
 				 {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
 				 {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -100,7 +100,64 @@ int p[9][10][10] ={{{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 				 {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
 				}};
 //int *(p[10][10])[9] = {p1, p2, p3, p4, p5, p6, p7, p8, p9};
+*/
 
+// W grze nie jest za dużo statków więc jest bardzo mała szansa na to
+// że funkcja nigdy się nie skończy wykonywać
+// (gdy nie ma możliwości położenia jakiegoś statku na planszy po prostu
+//  zaczyna układać statki od nowa)
+
+void genBoard(Board b, Ships s, int longest, char name)
+{
+    srand(time(0) * name);
+    clearBoard(b);
+    bool placed;
+    for (int i = longest; i > 0; --i) {
+        for (int k = 0; k < s[i]; ++k) {
+            int start = rand() % 100;
+            int ind = start;
+            placed = false;
+            while (++ind % 100 != start) {
+                int r = rand() % 2;
+                if (place(b, i, ind, r) || place(b, i, ind, r ^ 1)) {
+                    placed = true;
+                    break;
+                }
+            }
+        }
+        if (!placed) {
+            i = longest + 1;
+            clearBoard(b);
+        }
+    }
+}
+
+static bool place (Board b, int s, int ind, int orientation)
+{
+    int x = ind % 10;
+    int y = ind / 10;
+    if (orientation == 1) {
+        if (x + s > 10) return false;
+        for (int i = 0; i < s; ++i) {
+            if (b[x + i][y] != 0 || b[x + i + 1][y] == 1 || b[x + i - 1][y] == 1 || b[x + i][y + 1] == 1 || b[x + i][y - 1] == 1 || 
+                    b[x + i + 1][y + 1] == 1 ||b[x + i + 1][y - 1] == 1 ||b[x + i - 1][y + 1] == 1 ||b[x + i - 1][y - 1] == 1)
+                return false;
+        }
+        for (int i = 0; i < s; ++i) 
+            b[x + i][y] = 1;
+    } else {
+        if (y + s > 10) return false;
+        for (int i = 0; i < s; ++i) {
+            if (b[x][y + i] != 0 || b[x + 1][y + i] == 1 || b[x - 1][y + i] == 1 || b[x][y  + i + 1] == 1 || b[x][y + i - 1] == 1 ||
+                     b[x + 1][y + i + 1] == 1 || b[x - 1][y + i + 1] == 1 || b[x + 1][y  + i - 1] == 1 || b[x - 1][y + i - 1] == 1)
+                return false;
+        }
+        for (int i = 0; i < s; ++i) 
+            b[x][y + i] = 1;
+    }
+    return true;
+}
+/*
 void getBoard(Board b, int counter[], int *longest) 
 {
     for(int i = 0; i < 10; ++i) {
@@ -114,21 +171,22 @@ void getBoard(Board b, int counter[], int *longest)
     counter[5] = 1; 
     *longest = 5;
 }
-
-void randBoard(Board b, int counter[], int *longest, char n) 
+*/
+void randBoard(Board b, Ships counter, int *longest, char n) 
 {
     //sleep(1);
     srand(time(0) * n);
     int ind = rand() % 9;
-    for (int i = 0; i < 10; ++i) {
+    /*for (int i = 0; i < 10; ++i) {
         for (int j = 0; j < 10; ++j) {
             b[i][j] = p[ind][j][i];
         }
-    }
+    }*/
     counter[1] = 3;
     counter[2] = 3;
     counter[3] = 2;
     counter[4] = 1;
     counter[5] = 1;
     *longest = 5;
+    genBoard(b, counter, *longest, n * ind);
 }

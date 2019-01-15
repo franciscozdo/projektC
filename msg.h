@@ -4,6 +4,7 @@
 #include "fifo.h"
 #include "game.h"
 
-void sendMove(PipesPtr pipes, Shoot s); // wysyła ruch
-bool getMessage(PipesPtr pipes, char *m); // pobiera wiadomość m = "m"  lub "r"
+void sendMove(PipesPtr pipes, Shoot s);
+bool getMessage(PipesPtr pipes, char *m);
 void sendFeedback(PipesPtr pipes, Shoot s, Status stat);
+void sendSignal(PipesPtr pipes, int signal); // 1 - new game, 2 - give up

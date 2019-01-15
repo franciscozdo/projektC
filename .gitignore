@@ -3,3 +3,5 @@ Plan/*.log
 test.c
 win
 *.swp
+*.o
+*~

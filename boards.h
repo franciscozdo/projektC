@@ -9,5 +9,6 @@
 void getBoard(Board b, int ship_counter[], int *longest);
 void randBoard(Board b, int ship_counter[], int *longest, char n);
 void loadFromFile(Board b, int ship_counter[]);
+void genBoard(Board b, Ships s, int longest, char name);
 
 #endif
