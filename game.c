@@ -1,7 +1,7 @@
 #include "game.h"
 
 static int dir[8] = {1, 0, -1, 0, 0, 1, 0, -1}; // directions for dfs in isSunk()
-
+static int skos[8] = {1, 1, -1, -1, 1, -1, -1, 1};
 // cheks if coordinates are in board (in range [0, 10])
 static bool inBoard(Shoot s) 
 {
@@ -115,18 +115,37 @@ bool placeShip(Board b, int s, int ind, int orientation)
     if (orientation == 1) {
         if (x + s > 10) return false;
         for (int i = 0; i < s; ++i) {
-            if (b[x + i][y] != 0 || b[x + i + 1][y] == 1 || b[x + i - 1][y] == 1 || b[x + i][y + 1] == 1 || b[x + i][y - 1] == 1 || 
-                    b[x + i + 1][y + 1] == 1 ||b[x + i + 1][y - 1] == 1 ||b[x + i - 1][y + 1] == 1 ||b[x + i - 1][y - 1] == 1)
-                return false;
+            if (b[x + i][y] == 1) return false;
+            for(int j = 0; j < 4; ++j) {
+                if (x + i + dir[2 * j] >= 10 || x + i + dir[2 * j] < 0 ||
+                        y + dir[2 * j + 1] >= 10 || y + dir[2 * j + 1] < 0 ||
+                        x + i + skos[2 * j] >= 10 || x + i + skos[2 * j] < 0 ||
+                        y + skos[2 * j + 1] >= 10 || y + skos[2 * j + 1] < 0)
+                   continue; 
+
+                if (b[x + i + dir[2 * j]][y + dir[2 * j + 1]] == 1)
+                    return false;
+                if (b[x + i + skos[2 * j]][y + skos[2 * j + 1]] == 1)
+                    return false;
+            }   
         }
         for (int i = 0; i < s; ++i) 
             b[x + i][y] = 1;
     } else {
         if (y + s > 10) return false;
         for (int i = 0; i < s; ++i) {
-            if (b[x][y + i] != 0 || b[x + 1][y + i] == 1 || b[x - 1][y + i] == 1 || b[x][y  + i + 1] == 1 || b[x][y + i - 1] == 1 ||
-                     b[x + 1][y + i + 1] == 1 || b[x - 1][y + i + 1] == 1 || b[x + 1][y  + i - 1] == 1 || b[x - 1][y + i - 1] == 1)
-                return false;
+            if (b[x][y + i] == 1) return false;
+            for (int j = 0; j < 4; ++j) {
+                if (x + dir[2 * j] >= 10 || x + dir[2 * j] < 0 ||
+                        y + i + dir[2 * j + 1] >= 10 || y  + i + dir[2 * j + 1] < 0 ||
+                        x + skos[2 * j] >= 10 || x + skos[2 * j] < 0 ||
+                        y  + i + skos[2 * j + 1] >= 10 || y + i + skos[2 * j + 1] < 0)
+                   continue;
+                if (b[x + dir[2 * j]][y + i + dir[2 * j + 1]] == 1)
+                    return false;
+                if (b[x + skos[2 * j]][y + i + skos[2 * j + 1]] == 1)
+                    return false;
+            }
         }
         for (int i = 0; i < s; ++i) 
             b[x][y + i] = 1;

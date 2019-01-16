@@ -4,4 +4,4 @@ test.c
 win
 *.swp
 *.o
-*~
+*.xcf
