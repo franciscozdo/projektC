@@ -98,12 +98,50 @@ int markSunk(Shoot s, Board b)
     return n;
 }
 
-bool allSunk(Ships ships, int n)
+bool allSunk(Ships s)
 {
-    for (int i = 0; i <= n; ++i) {
-        //printf("[s%d - %d]", i, ships[i]);
-        if (ships[i] != 0){//puts("");
+    for (int i = 1; i <= s.longest; ++i) {
+        //printf("[s%d - %d]", i, s.count[i]);
+        if (s.count[i] != 0){//puts("");
             return false;}
     }//puts("");
     return true;
+}
+
+bool placeShip(Board b, int s, int ind, int orientation)
+{
+    int x = ind % 10;
+    int y = ind / 10;
+    if (orientation == 1) {
+        if (x + s > 10) return false;
+        for (int i = 0; i < s; ++i) {
+            if (b[x + i][y] != 0 || b[x + i + 1][y] == 1 || b[x + i - 1][y] == 1 || b[x + i][y + 1] == 1 || b[x + i][y - 1] == 1 || 
+                    b[x + i + 1][y + 1] == 1 ||b[x + i + 1][y - 1] == 1 ||b[x + i - 1][y + 1] == 1 ||b[x + i - 1][y - 1] == 1)
+                return false;
+        }
+        for (int i = 0; i < s; ++i) 
+            b[x + i][y] = 1;
+    } else {
+        if (y + s > 10) return false;
+        for (int i = 0; i < s; ++i) {
+            if (b[x][y + i] != 0 || b[x + 1][y + i] == 1 || b[x - 1][y + i] == 1 || b[x][y  + i + 1] == 1 || b[x][y + i - 1] == 1 ||
+                     b[x + 1][y + i + 1] == 1 || b[x - 1][y + i + 1] == 1 || b[x + 1][y  + i - 1] == 1 || b[x - 1][y + i - 1] == 1)
+                return false;
+        }
+        for (int i = 0; i < s; ++i) 
+            b[x][y + i] = 1;
+    }
+    return true;
+}
+
+int removeShip(Shoot pos, Board b)
+{
+    int len = 1;
+    markOnBoard(pos, b, NOT_SHOOT);
+    for (int i = 0; i < 4; ++i) {
+        Shoot ns = makeShoot(pos.x + dir[2 * i], pos.y + dir[2 * i + 1]);
+        if (checkOnBoard(ns, b) == SHIP)
+            len += removeShip(ns, b);
+    }
+    return len;
 }

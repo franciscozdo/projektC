@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include "game.h"
 
 #ifndef BOARDS
 #define BOARDS
 
-void getBoard(Board b, int ship_counter[], int *longest);
-void randBoard(Board b, int ship_counter[], int *longest, char n);
-void loadFromFile(Board b, int ship_counter[]);
-void genBoard(Board b, Ships s, int longest, char name);
+//void getBoard(Board b, Ships *s);
+void randBoard(Board b, Ships *s, char n);
+//void loadFromFile(Board b, Ships);
+void genBoard(Board b, Ships *s, char name);
 
 #endif

@@ -13,11 +13,22 @@ static char *my_name, *opp_name;
 static PipesPtr pipes;
 static GtkWidget *my_but[100], *opp_but[100], *creat_but[100];
 static GtkWidget *messages, *sec_messages;
+static struct panel {
+    GtkWidget *but[5];
+    char index[5][4];
+    bool waiting;
+    int length;
+} ship_len;
+static struct panel2 {
+    GtkWidget *vert_but, *horizon_but;
+    bool waiting;
+    int orientation;
+} orient;
+//static GtkWidget *images[10];
 static Board my_board, opp_board, creat_board;
 static char oindex[100][4], cindex[100][4];
 static bool my_round, game_run = false; // game_run - if game is started it's true
-static Ships my_ships, opp_ships;
-static int longest_ship;
+static Ships my_ships, opp_ships, creat_ships;
 
 
 void pokazBlad(char *komunikat);
@@ -28,7 +39,10 @@ static void give_up (GtkWidget *widget, gpointer *data);
 static void rand_board (GtkWidget *widget, gpointer *data);
 static void create_board (GtkWidget *widget, gpointer *data);
 static void quit_sec (GtkWidget *widget, gpointer *data) ;
+static void confirm (GtkWidget *widget, gpointer *data);
 static void creatShip (GtkWidget *widget, char* ind);
+static void change_orient(GtkWidget *widget, char *ind);
+static void change_len(GtkWidget *widget, char *ind);
 static gboolean refresh (gpointer data);
 static void changeButton (GtkWidget *widget, int status);
 static void epilog (char option);
@@ -45,13 +59,14 @@ int main(int argc, char **argv) {
 		my_name = "B"; opp_name = "A";
         my_round = false;
 	}
-
-	randBoard(my_board, my_ships, &longest_ship, my_name[0]);
-    for (int i = 0; i < 10; ++i) opp_ships[i] = my_ships[i];
-	clearBoard(opp_board);
+    
+    new_game(NULL, NULL);
+	//randBoard(my_board, &my_ships, my_name[0]);
+    //for (int i = 0; i < 10; ++i) opp_ships.count[i] = my_ships.count[i];
+	//clearBoard(opp_board);
 
 	gtk_init(&argc, &argv);
-	char win_name[] = "Statki x";
+	char win_name[12];
 	sprintf(win_name, "Statki %s", my_name);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -59,32 +74,28 @@ int main(int argc, char **argv) {
 	gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(end), NULL);
 
-	// MAIN GRID
+    GtkWidget *main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add(GTK_CONTAINER(window), main_box);
+
+    // LABEL TO DISPLAY MESSAGES
+
+    messages = gtk_label_new("");
+    gtk_label_set_text(GTK_LABEL(messages), "");
+	gtk_box_pack_start(GTK_BOX(main_box), messages, FALSE, FALSE, 5);
+	
+    GtkWidget *main_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_box_pack_start(GTK_BOX(main_box), main_hbox, TRUE, TRUE, 5);
+
+    // MAIN GRID
 
 	GtkWidget *main_grid = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(main_grid), 2);
     gtk_grid_set_column_spacing(GTK_GRID(main_grid), 2);
-    gtk_grid_set_row_homogeneous(GTK_GRID(main_grid), FALSE);
-    gtk_grid_set_column_homogeneous(GTK_GRID(main_grid), FALSE);
-	//gtk_widget_set_margin_end(box1, 5);
-	//gtk_box_pack_start(GTK_BOX(box1), main_grid, FALSE, FALSE, 0);
-	gtk_container_add(GTK_CONTAINER(window), main_grid);
+    //gtk_grid_set_row_homogeneous(GTK_GRID(main_grid), TRUE);
+    //gtk_grid_set_column_homogeneous(GTK_GRID(main_grid), TRUE);
+	gtk_box_pack_start(GTK_BOX(main_hbox), main_grid, TRUE, TRUE, 0);
 
-    messages = gtk_label_new(NULL);
-    gtk_label_set_text(GTK_LABEL(messages), "");
     
-    GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-
-	//gtk_container_add(GTK_CONTAINER(window), box1);
-    gtk_grid_attach(GTK_GRID(main_grid), box1, 0, 1, 21, 1);
-
-    // LABEL TO DISPLAY MESSAGES
-
-    messages = gtk_label_new(NULL);
-    gtk_label_set_text(GTK_LABEL(messages), "");
-	gtk_box_pack_start(GTK_BOX(box1), messages, FALSE, FALSE, 5);
-    //gtk_grid_attach(GTK_GRID(main_grid), messages, 5, 0, 11, 1);
-
     // BUILDING BOARDS WITH LABELS
 
 	for (int i = 0; i < N; ++i) {
@@ -131,6 +142,8 @@ int main(int argc, char **argv) {
 			int ind = i * N + j;
 			opp_but[ind] = gtk_button_new();
 			sprintf(oindex[ind], "%d%d", i, j);
+            //im = gtk_image_new_from_file("data/water.png");
+            //gtk_button_set_image(GTK_BUTTON(opp_but[ind]), im);
 	        //changeButton(opp_but[ind], NOT_SHOOT);
             //gtk_button_set_label(GTK_BUTTON(opp_but[ind]), ".");
             //printf("%s ", oindex[ind]);
@@ -145,8 +158,9 @@ int main(int argc, char **argv) {
     
     GtkWidget *left_panel = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_box_set_homogeneous(GTK_BOX(left_panel), TRUE);
-    gtk_container_set_border_width(GTK_CONTAINER(left_panel), 10);
-    gtk_grid_attach(GTK_GRID(main_grid), left_panel, 2 * N + 2, S, 1, 11);
+    gtk_container_set_border_width(GTK_CONTAINER(left_panel), 0);
+    gtk_box_pack_start(GTK_BOX(main_hbox), left_panel, TRUE, FALSE, 0);
+    //gtk_grid_attach(GTK_GRID(main_grid), left_panel, 2 * N + 2, S, 1, 11);
 
     // BUTTONS TO CONTROL THE GAME (NEW GEME, ETC.)
     
@@ -174,7 +188,7 @@ int main(int argc, char **argv) {
     
     GtkWidget *load_but = gtk_button_new();
     gtk_button_set_label(GTK_BUTTON(load_but), "Stwórz Planszę");
-    //gtk_box_pack_start(GTK_BOX(controls), load_but, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(controls), load_but, FALSE, FALSE, 0);
     //gtk_grid_attach(GTK_GRID(main_grid), load_but, 2 * N + 2, S + 3, 1, 1);
     g_signal_connect(G_OBJECT(load_but), "clicked", G_CALLBACK(create_board), NULL);
     
@@ -254,15 +268,50 @@ static void create_board (GtkWidget *widget, gpointer *data)
 	gtk_container_add(GTK_CONTAINER(sec_win), sec_grid);
     
     GtkWidget *box1 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-
-	//gtk_container_add(GTK_CONTAINER(window), box1);
     gtk_grid_attach(GTK_GRID(sec_grid), box1, 0, 1, 10, 1);
 
     // LABEL TO DISPLAY MESSAGES
 
     sec_messages = gtk_label_new(NULL);
-    gtk_label_set_text(GTK_LABEL(sec_messages), "");
-	gtk_box_pack_start(GTK_BOX(box1), sec_messages, FALSE, FALSE, 5);
+    gtk_label_set_text(GTK_LABEL(sec_messages), "Wybierz pole na który ma się zaczynać statek.");
+	gtk_box_pack_end(GTK_BOX(box1), sec_messages, TRUE, FALSE, 5);
+
+    GtkWidget *add_ship = gtk_frame_new("Nowy statek");
+    gtk_grid_attach(GTK_GRID(sec_grid), add_ship, 0, 2, 10, 1);
+   
+    GtkWidget *box3 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_container_set_border_width(GTK_CONTAINER(box3), 5);
+    gtk_container_add(GTK_CONTAINER(add_ship), box3);
+    // BUTTONS TO SET SHIP TO INSERT
+
+    GtkWidget *orient_lab = gtk_label_new("Orientacja:");
+    gtk_box_pack_start(GTK_BOX(box3), orient_lab, FALSE, FALSE, 5);
+    orient.waiting = true;
+
+    orient.horizon_but = gtk_toggle_button_new();
+    gtk_button_set_label(GTK_BUTTON(orient.horizon_but), "Poziomy");
+    gtk_box_pack_start(GTK_BOX(box3), orient.horizon_but, FALSE, FALSE, 0);
+    g_signal_connect(G_OBJECT(orient.horizon_but), "toggled", G_CALLBACK(change_orient), "h");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orient.horizon_but), TRUE);
+    
+    orient.vert_but = gtk_toggle_button_new();
+    gtk_button_set_label(GTK_BUTTON(orient.vert_but), "Pionowy");
+    gtk_box_pack_start(GTK_BOX(box3), orient.vert_but, FALSE, FALSE, 0);
+    g_signal_connect(G_OBJECT(orient.vert_but), "toggled", G_CALLBACK(change_orient), "v");
+
+
+    GtkWidget *length_lab = gtk_label_new(" Długość: ");
+    gtk_box_pack_start(GTK_BOX(box3), length_lab, FALSE, FALSE, 0);
+    ship_len.waiting = true;
+
+    for (int i = 0; i < 5; ++i) {
+        ship_len.but[i] = gtk_toggle_button_new();
+        sprintf(ship_len.index[i], "%d", i + 1);
+        gtk_button_set_label(GTK_BUTTON(ship_len.but[i]), ship_len.index[i]);
+        gtk_box_pack_start(GTK_BOX(box3), ship_len.but[i], FALSE, FALSE, 0);
+        g_signal_connect(G_OBJECT(ship_len.but[i]), "toggled", G_CALLBACK(change_len), ship_len.index[i]);
+    }
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ship_len.but[4]), TRUE);
 
     for (int i = 0; i < N; ++i) {
 		for (int j = 0; j < N; ++j) {
@@ -272,34 +321,92 @@ static void create_board (GtkWidget *widget, gpointer *data)
 	        changeButton(creat_but[ind], NOT_SHOOT);
 			g_signal_connect(G_OBJECT(creat_but[ind]), "clicked", G_CALLBACK(creatShip), cindex[ind]);
 
-			gtk_grid_attach(GTK_GRID(sec_grid), creat_but[ind], i, j + 2, 1, 1);
+			gtk_grid_attach(GTK_GRID(sec_grid), creat_but[ind], i, j + 3, 1, 1);
 		}
 	}
+    
 
     GtkWidget *box2 = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_container_set_border_width(GTK_CONTAINER(box2), 10);
-    gtk_grid_attach(GTK_GRID(sec_grid), box2, 0, N + 2, 10, 1);
+    gtk_grid_attach(GTK_GRID(sec_grid), box2, 0, N + 3, 10, 1);
 
-    GtkWidget *ok_but = gtk_button_new();
-    gtk_button_set_label(GTK_BUTTON(ok_but), "Zatwierdź");
-    gtk_box_pack_start(GTK_BOX(box2), ok_but, TRUE, FALSE, 5);
+    GtkWidget *cancel_but = gtk_button_new(); 
+    gtk_button_set_label(GTK_BUTTON(cancel_but), "Anuluj");
+    g_signal_connect(G_OBJECT(cancel_but), "clicked", G_CALLBACK(quit_sec), NULL);
+    gtk_box_pack_end(GTK_BOX(box2), cancel_but, FALSE, FALSE, 5);
+    
+    GtkWidget *confirm_but = gtk_button_new();
+    gtk_button_set_label(GTK_BUTTON(confirm_but), "Zatwierdź");
+    gtk_box_pack_end(GTK_BOX(box2), confirm_but, FALSE, FALSE, 5);
+    g_signal_connect(G_OBJECT(confirm_but), "clicked", G_CALLBACK(confirm), NULL);
+
 
     clearBoard(creat_board);
 
     gtk_widget_show_all(sec_win);
 }
 
+static void change_orient (GtkWidget *button, char *ind) 
+{
+    if (orient.waiting == false) return;
+    orient.waiting = false;
+    printf("toggled %s\n", ind);
+
+    if (ind[0] == 'v') {
+        orient.orientation = 0;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orient.horizon_but), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orient.vert_but), TRUE);
+    } else {
+        orient.orientation = 1;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orient.horizon_but), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orient.vert_but), FALSE);
+    }
+    orient.waiting = true;
+}
+
+static void change_len (GtkWidget *button, char *ind)
+{
+    if (ship_len.waiting == false) return;
+    ship_len.waiting = false;
+
+    int id = ind[0] - '0' - 1;
+    for (int i = 0; i < 5; ++i) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ship_len.but[i]), FALSE);
+    }
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ship_len.but[id]), TRUE);
+    ship_len.length = id + 1;
+
+    ship_len.waiting = true;
+}
+
 static void creatShip (GtkWidget *button, char* ind)
 {
-    Shoot p = makeShoot(ind[0] - '0', ind[1] - '0');
-    if (checkOnBoard(p, creat_board) == SHIP) {
-        gtk_label_set_text(GTK_LABEL(sec_messages), "Nie możesz tu postawić statku.");
-        return;
+    //printf("orient: %d length: %d\n", orient.orientation, ship_len.length);
+    Shoot pos = makeShoot(ind[0] - '0', ind[1] - '0');
+    
+    if (checkOnBoard(pos, creat_board) == SHIP) {
+        int len = removeShip(pos, creat_board);
+        printf("usun %d\n", len);
+    } else {
+        if (creat_ships.count[ship_len.length] == 0) {
+            return;
+        }
+        int id = pos.x + pos.y * 10;//ind[0] - '0' + (ind[1] - '0') * 10;
+        if (placeShip(creat_board, ship_len.length, id, orient.orientation)) {
+            --creat_ships.count[ship_len.length];
+        } else {
+            printf("nie\n");
+        } 
     }
-
-    markOnBoard(p, creat_board, SHIP);
     updateBoard('c');
-}   
+}
+
+static void confirm (GtkWidget *widget, gpointer *data)
+{
+    copyBoard(my_board, creat_board);
+    updateBoard('m');
+    quit_sec(NULL, NULL);
+}
 
 static void quit_sec (GtkWidget *widget, gpointer *data) 
 {
@@ -321,12 +428,12 @@ static void getMove (GtkWidget *button, char* ind) {
     if (checkOnBoard(s, opp_board) == NOT_SHOOT){
         game_run = true;
         // Sending shoot and marking on board
-        sendMove(pipes, s);
         markOnBoard(s, opp_board, UNKNOWN);
         int ind = s.x * N + s.y;
         changeButton(opp_but[ind], UNKNOWN);
         my_round = false;
         gtk_label_set_text(GTK_LABEL(messages), "");
+        sendMove(pipes, s);
     } else {
         gtk_label_set_text(GTK_LABEL(messages), "W to pole już strzelałeś!");
     }
@@ -336,7 +443,7 @@ static void changeButton(GtkWidget *button, int stat)
 {
     //printf("%d ", stat);
     //if(stat == NOT_SHOOT) return;
-    gtk_widget_set_size_request(button, 40, 40);
+    gtk_widget_set_size_request(button, 30, 30);
     char t[2];
     if (stat == HIT)
         sprintf(t, "T");
@@ -382,15 +489,15 @@ static gboolean refresh(gpointer data)
                 //printf("%s:%d\n",my_name,size_of_ship);
                 stat = SUNK;
                 updateBoard('m');
-                --my_ships[size_of_ship];
+                --my_ships.count[size_of_ship];
                 
             } else {
                 changeButton(my_but[ind], stat);
             }
             //printf("%sw%d\n",my_name, stat);
             sendFeedback(pipes, s, stat);
-            if (my_ships[size_of_ship] == 0) {
-                if (allSunk(my_ships, longest_ship)) {
+            if (my_ships.count[size_of_ship] == 0) {
+                if (allSunk(my_ships)) {
                     epilog('l'); // you loose
                     //end();
                 }
@@ -412,15 +519,16 @@ static gboolean refresh(gpointer data)
                 markOnBoard(s, opp_board, HIT);
                 size_of_ship = markSunk(s, opp_board);
                 //printf("%s: %d\n", my_name, size_of_ship);
-                stat = SUNK;
+                //stat = SUNK;
                 updateBoard('o');
-                --opp_ships[size_of_ship];
-                if (opp_ships[size_of_ship] == 0) {
-                    if (allSunk(opp_ships, longest_ship)) {
+                --opp_ships.count[size_of_ship];
+                //printf("%d %d<-\n", size_of_ship, opp_ships.count[size_of_ship]);
+                if (opp_ships.count[size_of_ship] == 0) {
+                    if (allSunk(opp_ships)) {
                         epilog('w');
                         //end();
                     }
-                }   
+                }
             } else {
                 markOnBoard(s, opp_board, stat);
                 changeButton(opp_but[ind], stat);
@@ -434,7 +542,7 @@ static gboolean refresh(gpointer data)
         } else if (msg[0] == 'n') {
             game_run = false;
             clearBoard(opp_board);
-	        randBoard(my_board, my_ships, &longest_ship, my_name[0]);
+	        randBoard(my_board, &my_ships, my_name[0]);
             updateBoard('m');
             updateBoard('o');
         }
@@ -465,7 +573,9 @@ static void new_game (GtkWidget *widget, gpointer *data)
     game_run = false;
     if(data != NULL) sendSignal(pipes, 1);
     clearBoard(opp_board);
-	randBoard(my_board, my_ships, &longest_ship, my_name[0]);
+	randBoard(my_board, &my_ships, my_name[0]);
+    for (int i = 0; i < 10; ++i) opp_ships.count[i] = my_ships.count[i];
+    opp_ships.longest = my_ships.longest;
     updateBoard('m');
     updateBoard('o');
 }
@@ -479,7 +589,7 @@ static void give_up (GtkWidget *widget, gpointer *data)
 static void rand_board (GtkWidget *widget, gpointer *data)
 {
     if (!game_run) {
-	    randBoard(my_board, my_ships, &longest_ship, my_name[0]);
+	    randBoard(my_board, &my_ships, my_name[0]);
         updateBoard('m');
     } else {
         gtk_label_set_text(GTK_LABEL(messages), "Nie możesz już zmienić planszy. Gra się rozpoczęła.");
