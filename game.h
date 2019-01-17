@@ -25,7 +25,7 @@ Shoot makeShoot(int x, int y);
 //bool checkShoot(Shoot s, Board b); // checks if it's a proper move
 void markOnBoard(Shoot s, Board b, Status stat);
 int checkOnBoard(Shoot s, Board b);
-bool isSunk(Shoot s, Board b, bool vis[10][10]);
+bool isSunk(Shoot s, Board b);
 int markSunk(Shoot s, Board b); // returns number of changed boxes
 bool allSunk(Ships ships); // n - number of lengths of ships
 void copyBoard(Board b1, Board b2);

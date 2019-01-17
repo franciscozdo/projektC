@@ -62,7 +62,7 @@ int checkOnBoard(Shoot s, Board b)
 	return b[s.x][s.y];
 }
 
-bool isSunk(Shoot s, Board b, bool vis[10][10])
+bool isSunk(Shoot s, Board b)
 {
     Status stat = checkOnBoard(s, b);
     //printf("spr %d %d - stat %d\n", s.x, s.y, stat);
@@ -70,15 +70,17 @@ bool isSunk(Shoot s, Board b, bool vis[10][10])
         return false;
     //if (stat == MISSED || stat == NOT_SHOOT)
     //    return true;
+    markOnBoard(s, b, NOT_SHOOT);
     bool cond = true;
-    vis[s.x][s.y] = true;
+    //vis[s.x][s.y] = true;
     for (int i = 0; i < 4; ++i) {
         Shoot ns = makeShoot(s.x + dir[2 * i], s.y + dir[2 * i + 1]);
-        if (inBoard(ns) && !vis[ns.x][ns.y] && (
+        if (inBoard(ns) && (
                     checkOnBoard(ns, b) == SHIP || checkOnBoard(ns, b) == HIT 
                     || checkOnBoard(ns, b) == MY_HIT))
-            cond &= isSunk(ns, b, vis);
+            cond &= isSunk(ns, b);
     }
+    markOnBoard(s, b, stat);
     return cond;
 }
 
@@ -112,19 +114,24 @@ bool placeShip(Board b, int s, int ind, int orientation)
 {
     int x = ind % 10;
     int y = ind / 10;
+    printf("x = %d, y = %d, dir = %d\n", x, y, orientation);
     if (orientation == 1) {
         if (x + s > 10) return false;
         for (int i = 0; i < s; ++i) {
             if (b[x + i][y] == 1) return false;
             for(int j = 0; j < 4; ++j) {
+                printf("jestem w (%d, %d)\n", x, y);
                 if (x + i + dir[2 * j] >= 10 || x + i + dir[2 * j] < 0 ||
-                        y + dir[2 * j + 1] >= 10 || y + dir[2 * j + 1] < 0 ||
-                        x + i + skos[2 * j] >= 10 || x + i + skos[2 * j] < 0 ||
-                        y + skos[2 * j + 1] >= 10 || y + skos[2 * j + 1] < 0)
-                   continue; 
-
+                        y + dir[2 * j + 1] >= 10 || y + dir[2 * j + 1] < 0)
+                    continue;
                 if (b[x + i + dir[2 * j]][y + dir[2 * j + 1]] == 1)
                     return false;
+
+
+                if (x + i + skos[2 * j] > 10 || x + i + skos[2 * j] < 0 ||
+                        y + skos[2 * j + 1] > 10 || y + skos[2 * j + 1] < 0)
+                   continue; 
+
                 if (b[x + i + skos[2 * j]][y + skos[2 * j + 1]] == 1)
                     return false;
             }   
@@ -136,13 +143,15 @@ bool placeShip(Board b, int s, int ind, int orientation)
         for (int i = 0; i < s; ++i) {
             if (b[x][y + i] == 1) return false;
             for (int j = 0; j < 4; ++j) {
-                if (x + dir[2 * j] >= 10 || x + dir[2 * j] < 0 ||
-                        y + i + dir[2 * j + 1] >= 10 || y  + i + dir[2 * j + 1] < 0 ||
-                        x + skos[2 * j] >= 10 || x + skos[2 * j] < 0 ||
-                        y  + i + skos[2 * j + 1] >= 10 || y + i + skos[2 * j + 1] < 0)
-                   continue;
+                if (x + dir[2 * j] > 10 || x + dir[2 * j] < 0 ||
+                        y + i + dir[2 * j + 1] > 10 || y  + i + dir[2 * j + 1] < 0)
+                    continue;
                 if (b[x + dir[2 * j]][y + i + dir[2 * j + 1]] == 1)
                     return false;
+
+                if (x + skos[2 * j] > 10 || x + skos[2 * j] < 0 ||
+                        y  + i + skos[2 * j + 1] > 10 || y + i + skos[2 * j + 1] < 0)
+                   continue;
                 if (b[x + skos[2 * j]][y + i + skos[2 * j + 1]] == 1)
                     return false;
             }
