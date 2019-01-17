@@ -20,16 +20,13 @@ typedef struct ships {
 
 void clearBoard(Board b);
 Shoot makeShoot(int x, int y);
-//Shoot makeShootFromStr(char *s);
-//bool isCorrect(Shoot s);
-//bool checkShoot(Shoot s, Board b); // checks if it's a proper move
 void markOnBoard(Shoot s, Board b, Status stat);
-int checkOnBoard(Shoot s, Board b);
+Status checkOnBoard(Shoot s, Board b);
 bool isSunk(Shoot s, Board b);
 int markSunk(Shoot s, Board b); // returns number of changed boxes
 bool allSunk(Ships ships); // n - number of lengths of ships
 void copyBoard(Board b1, Board b2);
-bool placeShip(Board b, int s, int ind, int orientation);
+bool placeShip(int slen, int orientation, Shoot pos, Board b);
 int removeShip(Shoot pos, Board b);
 
 #endif
