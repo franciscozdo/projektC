@@ -12,7 +12,7 @@ static GtkWidget *window, *sec_win;
 static char *my_name, *opp_name;
 static PipesPtr pipes;
 static GtkWidget *my_but[100], *opp_but[100], *creat_but[100];
-static GtkWidget *my_but_im[100], *opp_but_im[100], *creat_but_im[100];
+//static GtkWidget *my_but_im[100], *opp_but_im[100], *creat_but_im[100];
 static GtkWidget *messages, *sec_messages;
 static struct panel {
     GtkWidget *but[5];
@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
 		for (int j = 0; j < N; ++j) {
 			int ind = i * N + j;
 			my_but[ind] = gtk_button_new();
-            gtk_button_set_image(GTK_BUTTON(my_but[ind]), my_but_im[ind]);
+            //gtk_button_set_image(GTK_BUTTON(my_but[ind]), my_but_im[ind]);
             //changeButton(my_but[ind], my_board[i][j]);
             //gtk_button_set_label(GTK_BUTTON(my_but[ind]), (my_board[i][j] == 0) ? "." : "X");
 			//sprintf(mindex[ind], "m%d%d", i, j);
@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
 			opp_but[ind] = gtk_button_new();
 			sprintf(oindex[ind], "%d%d", i, j);
             //im = gtk_image_new_from_file("data/water.png");
-            gtk_button_set_image(GTK_BUTTON(opp_but[ind]), opp_but_im[ind]);
+            //gtk_button_set_image(GTK_BUTTON(opp_but[ind]), opp_but_im[ind]);
 	        //changeButton(opp_but[ind], NOT_SHOOT);
             //gtk_button_set_label(GTK_BUTTON(opp_but[ind]), ".");
             //printf("%s ", oindex[ind]);
@@ -352,7 +352,7 @@ static void create_board (GtkWidget *widget, gpointer *data)
 			int ind = i * N + j;
 			creat_but[ind] = gtk_button_new();
 			sprintf(cindex[ind], "%d%d", i, j);
-            gtk_button_set_image(GTK_BUTTON(creat_but[ind]), creat_but_im[ind]);
+            //gtk_button_set_image(GTK_BUTTON(creat_but[ind]), creat_but_im[ind]);
 	        changeButton(creat_but[ind], NOT_SHOOT);
 			g_signal_connect(G_OBJECT(creat_but[ind]), "clicked", G_CALLBACK(creatShip), cindex[ind]);
 
