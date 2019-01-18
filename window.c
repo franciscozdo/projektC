@@ -364,7 +364,8 @@ static void creatShip (GtkWidget *button, char* ind)
             return;
         }
         int id = pos.x + pos.y * 10;
-        if (placeShip(creat_board, ship_len.length, id, orient.orientation)) {
+        Shoot pos = makeShoot(id % 10, id / 10);
+        if (placeShip(ship_len.length, orient.orientation, pos, creat_board)) {
             --creat_ships.count[ship_len.length];
         } else {
             gtk_label_set_text(GTK_LABEL(sec_messages),"Tutaj nie możesz postawić statku.");
@@ -468,6 +469,7 @@ static gboolean refresh(gpointer data)
             } else {
                 changeButton(my_but[ind], stat);
             }
+            puts("tutaj?");
             updateBoard('m');
             sendFeedback(pipes, s, stat);
             if (my_ships.count[size_of_ship] == 0) {

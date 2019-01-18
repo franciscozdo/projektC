@@ -49,7 +49,7 @@ bool isSunk(Shoot s, Board b)
     
     for (int i = 0; i < 4; ++i) {
         Shoot ns = makeShoot(s.x + dir[2 * i], s.y + dir[2 * i + 1]);
-        if (inBoard(ns))
+        if (inBoard(ns) && checkOnBoard(ns, b) != NOT_SHOOT)
             cond &= isSunk(ns, b);
     }
     markOnBoard(s, b, stat); // marks previous value
@@ -94,7 +94,7 @@ int removeShip(Shoot pos, Board b)
 bool placeShip(int slen, int orientation, Shoot pos, Board b)
 {
    if (orientation == 1) {
-        Shoot ns = makeShoot(pos.x + slen, pos.y);
+        Shoot ns = makeShoot(pos.x + slen - 1, pos.y);
         if (!inBoard(ns)) 
             return false;
 
@@ -113,7 +113,7 @@ bool placeShip(int slen, int orientation, Shoot pos, Board b)
         for (int k = 0; k < slen; ++k) 
             markOnBoard(makeShoot(pos.x + k, pos.y), b, SHIP);
    } else {
-        Shoot ns = makeShoot(pos.x, pos.y + slen);
+        Shoot ns = makeShoot(pos.x, pos.y + slen - 1);
         if (!inBoard(ns)) 
             return false;
 
