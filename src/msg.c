@@ -1,4 +1,4 @@
-#include "msg.h"
+#include "../headers/msg.h"
 //#include <stdio.h>
 
 void sendMove(PipesPtr pipes, Shoot s) 

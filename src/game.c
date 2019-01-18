@@ -1,4 +1,4 @@
-#include "game.h"
+#include "../headers/game.h"
 
 static int dir[8] = {1, 0, -1, 0, 0, 1, 0, -1}; // directions for dfs in isSunk()
 static int skos[8] = {1, 1, -1, -1, 1, -1, -1, 1};

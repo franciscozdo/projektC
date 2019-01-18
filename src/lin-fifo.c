@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "fifo.h"
+#include "../headers/fifo.h"
 
 struct pipes {
     FILE *fifo_in, *fifo_out;

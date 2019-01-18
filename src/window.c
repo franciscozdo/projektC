@@ -1,8 +1,8 @@
 #include <gtk/gtk.h>
-#include "fifo.h"
-#include "msg.h"
-#include "boards.h"
-#include "game.h"
+#include "../headers/fifo.h"
+#include "../headers/msg.h"
+#include "../headers/boards.h"
+#include "../headers/game.h"
 
 #define MAKS_DL_TEKSTU 3
 #define N 10

@@ -1,5 +1,5 @@
-#include "boards.h"
-#include "game.h"
+#include "../headers/boards.h"
+#include "../headers/game.h"
 #include <stdio.h>
 // W grze nie jest za dużo statków więc jest bardzo mała szansa na to
 // że funkcja nigdy się nie skończy wykonywać
