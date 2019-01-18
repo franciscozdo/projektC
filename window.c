@@ -26,7 +26,7 @@ static struct panel2 {
 } orient;
 static Board my_board, opp_board, creat_board;
 static char oindex[100][4], cindex[100][4];
-static bool my_round, game_run = false; // game_run - if game is started it's true
+static bool my_round, game_run = false, end_of_game = false; // game_run - if game is started it's true
 static Ships my_ships, opp_ships, creat_ships;
 
 void pokazBlad(char *komunikat);
@@ -211,10 +211,20 @@ static void updateBoard(char c)
 
 static void create_board (GtkWidget *widget, gpointer *data)
 {
-    if (game_run) return;
+    if (game_run) {
+        gtk_label_set_text(GTK_LABEL(messages), "Nie możesz już zmienić planszy. Gra się rozpoczęła.");
+        return;
+    }
+    if (end_of_game) {
+        gtk_label_set_text(GTK_LABEL(messages), "Gra się skończyła.");
+        return;
+    }
 
     sec_win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_title(GTK_WINDOW(sec_win), "Wybieranie planszy");
+    gtk_window_set_transient_for (GTK_WINDOW(sec_win), GTK_WINDOW(window));
+    gtk_window_set_destroy_with_parent (GTK_WINDOW(sec_win), TRUE);
+    gtk_window_set_position(GTK_WINDOW(sec_win), GTK_WIN_POS_CENTER_ON_PARENT);
 	gtk_container_set_border_width(GTK_CONTAINER(sec_win), 10);
 	g_signal_connect(G_OBJECT(sec_win), "destroy", G_CALLBACK(quit_sec), NULL);
 
@@ -398,6 +408,10 @@ static void end (GtkWidget *widget, gpointer *data)
 }
 
 static void getMove (GtkWidget *button, char* ind) {
+    if (end_of_game) {
+        gtk_label_set_text(GTK_LABEL(messages), "Gra się skończyła.");
+        return;
+    }
     if (!my_round) {
         gtk_label_set_text(GTK_LABEL(messages), "Nie Twoja runda.");
         return;
@@ -474,7 +488,7 @@ static gboolean refresh(gpointer data)
             sendFeedback(pipes, s, stat);
             if (my_ships.count[size_of_ship] == 0) {
                 if (allSunk(my_ships)) {
-                    epilog('l'); // you loose
+                    epilog('L'); // you loose
                     //end();
                 }
             }
@@ -525,41 +539,52 @@ static void epilog (char option)
     if (option == 'w') {
         sprintf(alert, "Wygrałeś.\n Zestrzeliłeś wszystkie statki gracza %s\n", opp_name);
         pokazBlad(alert);
-        new_game(NULL, (gpointer)"N");
-    } else if (option == 'l'){
+    } else if (option == 'L'){
         sprintf(alert, "Przegrałeś.\n Gracz %s zestrzelił Ci wszystkie statki.\n", opp_name);
         pokazBlad(alert);
-        new_game(NULL, NULL);
     } else if (option == 'g') {
         sprintf(alert, "Twój przeciwnik poddał się.\nWygrałeś.\n");
         pokazBlad(alert);
-    }
+    } else if (option == 'l') {
+        sprintf(alert, "Poddałeś się.");
+        pokazBlad(alert);
+    }   
+    end_of_game = true;
 }
 
 static void new_game (GtkWidget *widget, gpointer *data)
 {
     game_run = false;
+    end_of_game = false;
     if(data != NULL) sendSignal(pipes, 1);
     clearBoard(opp_board);
 	randBoard(my_board, &my_ships, my_name[0]);
-    for (int i = 0; i < 10; ++i) opp_ships.count[i] = my_ships.count[i], creat_ships.count[i] = my_ships.count[i];
-    opp_ships.longest = my_ships.longest;
+    opp_ships = creat_ships = my_ships;
+    if (my_name[0] == 'A') my_round = true;
     updateBoard('m');
     updateBoard('o');
 }
 
 static void give_up (GtkWidget *widget, gpointer *data)
 {
+    if (end_of_game) {
+        gtk_label_set_text(GTK_LABEL(messages), "Gra się skończyła.");
+        return;
+    }
     sendSignal(pipes, 2);
-    new_game(NULL, (gpointer)"N");
+    epilog('l');
 }
 
 static void rand_board (GtkWidget *widget, gpointer *data)
 {
-    if (!game_run) {
-	    randBoard(my_board, &my_ships, my_name[0]);
-        updateBoard('m');
-    } else {
-        gtk_label_set_text(GTK_LABEL(messages), "Nie możesz już zmienić planszy. Gra się rozpoczęła.");
+    if (end_of_game) {
+        gtk_label_set_text(GTK_LABEL(messages), "Gra się skończyła.");
+        return;
     }
+    if (game_run) {
+        gtk_label_set_text(GTK_LABEL(messages), "Nie możesz już zmienić planszy. Gra się rozpoczęła.");
+        return;
+    }
+	randBoard(my_board, &my_ships, my_name[0]);
+    updateBoard('m');
 }

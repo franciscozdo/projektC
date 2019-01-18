@@ -6,14 +6,19 @@
 // (gdy nie ma możliwości położenia jakiegoś statku na planszy po prostu
 //  zaczyna układać statki od nowa)
 
-void genBoard(Board b, Ships *s, char name)
+static int min (int a, int b)
+{
+    return a < b ? a : b;
+}
+
+void genBoard(Board b, Ships s, char name)
 {
     srand(time(0) * name);
     clearBoard(b);
     bool placed;
     //s->longest = 5;
-    for (int i = s->longest; i > 0;) {
-        for (int k = 0; k < s->count[i]; ++k) {
+    for (int i = s.longest; i > 0;) {
+        for (int k = 0; k < s.count[i]; ++k) {
             int start = rand() % 100;
             int ind = start;
             placed = false;
@@ -30,7 +35,7 @@ void genBoard(Board b, Ships *s, char name)
         }
         niedasie:
         if (!placed) {
-            i = s->longest;
+            i = s.longest;
             clearBoard(b);
         } else
             i--;
@@ -39,19 +44,26 @@ void genBoard(Board b, Ships *s, char name)
 
 void randBoard(Board b, Ships *s, char n) 
 {
-    //sleep(1);
     srand(time(0) * n);
     int ind = rand() % 9;
-    /*for (int i = 0; i < 10; ++i) {
-        for (int j = 0; j < 10; ++j) {
-            b[i][j] = p[ind][j][i];
+    getShips(s);
+    genBoard(b, *s, n * ind);
+}
+
+void getShips(Ships *s)
+{
+    FILE *src = fopen("data/ships.len", "r");
+    int c;
+    int max[6] = {0, 5, 4, 3, 2, 2};
+    s->longest = 0;
+    while ((c = getc(src)) =='#')
+        while ((c = getc(src)) != '\n');
+    if (c < '9' && c >'0') ungetc(c, src);
+    for (int i = 0; i < 5; ++i) {
+        if (fscanf(src, "%d", &(s->count[i + 1]) ) != 0) {
+            s->longest = i + 1;
+            s->count[i + 1] = min(s->count[i + 1], max[i + 1]);
         }
-    }*/
-    s->count[1] = 3;//3;
-    s->count[2] = 3;//3;
-    s->count[3] = 2;//2;
-    s->count[4] = 1;//1;
-    s->count[5] = 1;//1;
-    s->longest = 5;//5;
-    genBoard(b, s, n * ind);
+    }
+    fclose(src);
 }

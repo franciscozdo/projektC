@@ -41,16 +41,18 @@ Status checkOnBoard(Shoot s, Board b)
 bool isSunk(Shoot s, Board b)
 {
     Status stat = checkOnBoard(s, b);
+    if (stat == MISSED) return true;
     if (stat == SHIP)
         return false;
-    
+    bool cond = (stat == HIT || stat == MY_HIT);
+    //printf("sprawdzam %d %d = %d\n", s.x, s.y, cond);
     markOnBoard(s, b, NOT_SHOOT); // marks to avoid returning in the same 
-    bool cond = checkOnBoard(s, b) == HIT || checkOnBoard(s, b) == MY_HIT;
     
     for (int i = 0; i < 4; ++i) {
         Shoot ns = makeShoot(s.x + dir[2 * i], s.y + dir[2 * i + 1]);
-        if (inBoard(ns) && checkOnBoard(ns, b) != NOT_SHOOT)
+        if (inBoard(ns) && checkOnBoard(ns, b) != NOT_SHOOT) {// && (checkOnBoard(ns, b) == HIT || checkOnBoard(ns, b) == MY_HIT))
             cond &= isSunk(ns, b);
+        }
     }
     markOnBoard(s, b, stat); // marks previous value
     return cond;
