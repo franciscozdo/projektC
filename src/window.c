@@ -69,24 +69,24 @@ int main(int argc, char **argv) {
 	gtk_container_set_border_width(GTK_CONTAINER(window), 10);
 	g_signal_connect(G_OBJECT(window), "destroy", G_CALLBACK(end), NULL);
 
-    GtkWidget *main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    GtkWidget *main_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
     gtk_container_add(GTK_CONTAINER(window), main_box);
 
     // LABEL TO DISPLAY MESSAGES
 
     messages = gtk_label_new("");
     gtk_label_set_text(GTK_LABEL(messages), "");
-	gtk_box_pack_start(GTK_BOX(main_box), messages, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(main_box), messages, TRUE, FALSE, 0);
 	
-    GtkWidget *main_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_start(GTK_BOX(main_box), main_hbox, TRUE, TRUE, 5);
+    GtkWidget *main_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(main_box), main_hbox, TRUE, TRUE, 0);
 
     // MAIN GRID
 
 	GtkWidget *main_grid = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(main_grid), 0);
     gtk_grid_set_column_spacing(GTK_GRID(main_grid), 0);
-	gtk_box_pack_start(GTK_BOX(main_hbox), main_grid, FALSE, FALSE, 0);
+	gtk_box_pack_start(GTK_BOX(main_hbox), main_grid, TRUE, FALSE, 0);
 
     
     // BUILDING BOARDS WITH LABELS
@@ -271,31 +271,34 @@ static void create_board (GtkWidget *widget, gpointer *data)
 
     orient.horizon_but = gtk_toggle_button_new();
     gtk_button_set_label(GTK_BUTTON(orient.horizon_but), "Poziomy");
-    gtk_box_pack_start(GTK_BOX(box3), orient.horizon_but, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box3), orient.horizon_but, TRUE, TRUE, 0);
     g_signal_connect(G_OBJECT(orient.horizon_but), "toggled", G_CALLBACK(change_orient), "h");
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(orient.horizon_but), TRUE);
     
     orient.vert_but = gtk_toggle_button_new();
     gtk_button_set_label(GTK_BUTTON(orient.vert_but), "Pionowy");
-    gtk_box_pack_start(GTK_BOX(box3), orient.vert_but, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box3), orient.vert_but, TRUE, TRUE, 0);
     g_signal_connect(G_OBJECT(orient.vert_but), "toggled", G_CALLBACK(change_orient), "v");
     
     GtkWidget *length_lab = gtk_label_new(" Długość: ");
-    gtk_box_pack_start(GTK_BOX(box3), length_lab, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(box3), length_lab, TRUE, FALSE, 0);
     
     for (int i = 0; i < 5; ++i) {
         ship_len.but[i] = gtk_toggle_button_new();
         sprintf(ship_len.index[i], "%d", i + 1);
         gtk_button_set_label(GTK_BUTTON(ship_len.but[i]), ship_len.index[i]);
-        gtk_box_pack_start(GTK_BOX(box3), ship_len.but[i], FALSE, FALSE, 0);
+        gtk_box_pack_start(GTK_BOX(box3), ship_len.but[i], TRUE, TRUE, 0);
         g_signal_connect(G_OBJECT(ship_len.but[i]), "toggled", G_CALLBACK(change_len), ship_len.index[i]);
     }
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ship_len.but[4]), TRUE);
 
+    GtkWidget *extra_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_box_pack_start(GTK_BOX(main_box), extra_box, FALSE, FALSE, 0);
+
     GtkWidget *sec_grid = gtk_grid_new();
     gtk_grid_set_row_spacing(GTK_GRID(sec_grid), 0);
     gtk_grid_set_column_spacing(GTK_GRID(sec_grid), 0);
-    gtk_box_pack_start(GTK_BOX(main_box), sec_grid, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(extra_box), sec_grid, FALSE, TRUE, 5);
 
     for (int i = 0; i < N; ++i) {
 		GtkWidget *rowname = gtk_label_new(NULL);
@@ -571,6 +574,7 @@ static void epilog (char option)
         sprintf(alert, "Poddałeś się.");
         pokazBlad(alert);
     }   
+    game_run = false;
     end_of_game = true;
 }
 
