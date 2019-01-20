@@ -16,6 +16,7 @@ typedef int Board[10][10]; // to store information about status
 typedef struct ships {
    int count[6];
    int longest;
+   int all, left;
 } Ships; // to store how many ships of specified length you have
 
 void clearBoard(Board b);

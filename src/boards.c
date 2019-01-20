@@ -54,6 +54,7 @@ void getShips(Ships *s)
 {
     FILE *src = fopen("data/ships.len", "r");
     int c;
+    int all = 0;
     int max[6] = {0, 5, 4, 3, 2, 2};
     s->longest = 0;
     while ((c = getc(src)) =='#')
@@ -63,7 +64,9 @@ void getShips(Ships *s)
         if (fscanf(src, "%d", &(s->count[i + 1]) ) != 0) {
             s->longest = i + 1;
             s->count[i + 1] = min(s->count[i + 1], max[i + 1]);
+            all += s->count[i + 1];
         }
     }
+    s->all = s->left = all;
     fclose(src);
 }

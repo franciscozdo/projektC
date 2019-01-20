@@ -13,6 +13,9 @@ static char *my_name, *opp_name;
 static PipesPtr pipes;
 static GtkWidget *my_but[100], *opp_but[100], *creat_but[100];
 static GtkWidget *messages, *sec_messages, *instructions;
+static struct statstruct {
+    GtkWidget *my_sunk, *opp_sunk, *my_left, *opp_left;
+} statistics;
 static struct panel {
     GtkWidget *but[5];
     char index[5][4];
@@ -44,7 +47,8 @@ static void change_len(GtkWidget *widget, char *ind);
 static gboolean refresh (gpointer data);
 static void changeButton (GtkWidget *widget, int status);
 static void epilog (char option);
-//static void update_instruction (); 
+static void update_instruction (); 
+static void update_stats();
 
 
 int main(int argc, char **argv) {
@@ -134,13 +138,32 @@ int main(int argc, char **argv) {
 	}
     
     GtkWidget *left_panel = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
-    gtk_box_set_homogeneous(GTK_BOX(left_panel), TRUE);
+    //gtk_box_set_homogeneous(GTK_BOX(left_panel), TRUE);
     gtk_container_set_border_width(GTK_CONTAINER(left_panel), 0);
     gtk_box_pack_start(GTK_BOX(main_hbox), left_panel, TRUE, FALSE, 0);
 
+    // STATISTICS
+    
+    GtkWidget *stat_frame = gtk_frame_new("Statystyki");
+    gtk_box_pack_start(GTK_BOX(left_panel), stat_frame, FALSE, FALSE, 0);
+
+    GtkWidget *stats = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
+    gtk_container_set_border_width(GTK_CONTAINER(stats), 10);
+	gtk_container_add(GTK_CONTAINER(stat_frame), stats);
+
+    statistics.my_sunk = gtk_label_new(NULL);
+    statistics.opp_sunk = gtk_label_new(NULL);
+    statistics.my_left = gtk_label_new(NULL);
+    statistics.opp_left = gtk_label_new(NULL);
+    gtk_box_pack_start(GTK_BOX(stats), statistics.my_left, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(stats), statistics.opp_left, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(stats), statistics.my_sunk, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(stats), statistics.opp_sunk, FALSE, FALSE, 0);
+
+
     // BUTTONS TO CONTROL THE GAME (NEW GEME, ETC.)
     
-    GtkWidget *ctrl_frame = gtk_frame_new("Controls");
+    GtkWidget *ctrl_frame = gtk_frame_new("Opcje");
     gtk_box_pack_start(GTK_BOX(left_panel), ctrl_frame, FALSE, FALSE, 0);
     
     GtkWidget *controls = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
@@ -192,6 +215,18 @@ void pokazBlad(char *komunikat)
     gtk_widget_destroy (dialog);
 }
 
+static void update_stats()
+{
+    char str[100];
+    sprintf(str, "Zatopione: %d", my_ships.all - my_ships.left);
+    gtk_label_set_text(GTK_LABEL(statistics.my_sunk), str);
+    sprintf(str, "Zatopiłeś przeciwnikowi: %d", opp_ships.all - opp_ships.left);
+    gtk_label_set_text(GTK_LABEL(statistics.opp_sunk), str);
+    sprintf(str, "Zostało Ci: %d", my_ships.left);
+    gtk_label_set_text(GTK_LABEL(statistics.my_left), str);
+    sprintf(str, "Przeciwnikowi zostało: %d", opp_ships.left);
+    gtk_label_set_text(GTK_LABEL(statistics.opp_left), str);
+}
 static void updateBoard(char c)
 {
     if (c == 'm') {
@@ -213,7 +248,7 @@ static void updateBoard(char c)
 static void update_instruction () 
 {
     char instr_str[200];
-    sprintf(instr_str, "Klikając na planszy ustaw statki tak jak chcesz. Do ustawienia zostało Ci:\n1-masztowców: %d\n2-masztowców: %d\n3-masztowców: %d\n4-masztowców: %d\n5-masztowców: %d\n", 
+    sprintf(instr_str, "Klikając na planszy ustaw statki tak jak chcesz. Do ustawienia zostało Ci:\n\tjednomasztowców: %d\n\tdwumasztowców: %d\n\ttrójmasztowców: %d\n\tczteromasztowców: %d\n\tpięciomasztowców: %d\n", 
             creat_ships.count[1], creat_ships.count[2], creat_ships.count[3], creat_ships.count[4], creat_ships.count[5]); 
     gtk_label_set_text(GTK_LABEL(instructions), instr_str);
 }
@@ -504,12 +539,13 @@ static gboolean refresh(gpointer data)
                 size_of_ship = markSunk(s, my_board);
                 stat = SUNK;
                 --my_ships.count[size_of_ship];
-                
+                --my_ships.left;
             } else {
                 changeButton(my_but[ind], stat);
             }
             //puts("tutaj?");
             updateBoard('m');
+            update_stats();
             sendFeedback(pipes, s, stat);
             if (my_ships.count[size_of_ship] == 0) {
                 if (allSunk(my_ships)) {
@@ -533,8 +569,10 @@ static gboolean refresh(gpointer data)
             if (stat == SUNK) {
                 markOnBoard(s, opp_board, HIT);
                 size_of_ship = markSunk(s, opp_board);
-                updateBoard('o');
                 --opp_ships.count[size_of_ship];
+                --opp_ships.left;
+                updateBoard('o');
+                update_stats();
                 if (opp_ships.count[size_of_ship] == 0) {
                     if (allSunk(opp_ships)) {
                         epilog('w');
@@ -593,6 +631,7 @@ static void new_game (GtkWidget *widget, gpointer *data)
     if (my_name[0] == 'A') my_round = true;
     updateBoard('m');
     updateBoard('o');
+    update_stats();
 }
 
 static void give_up (GtkWidget *widget, gpointer *data)

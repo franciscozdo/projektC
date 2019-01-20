@@ -11,41 +11,13 @@ $(shell mkdir -p $(BUILDDIR))
 
 SRC=$(wildcard $(SRCDIR)/*.c)
 OBJ=$(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.o)
-#DEP=$(SRC:$(SRCDIR)/%.c=$(BUILDDIR)/%.d)
 
-#SRC=window.c game.c msg.c lin-fifo.c boards.c #creat.c
-#DEPS=game.h msg.h fifo.h boards.h #creat.h
-#OBJ=game.o msg.o lin-fifo.o window.o boards.o #creat.o
-
-#YOU: $(SRC) $(NAME)
-#$(DEP)
 $(NAME): $(OBJ) 
 	$(CC) $(CFLAGS) -o $(NAME) $(OBJ) $(GTKFLAGS)
-
-#window.o: window.c $(DEP)
-#	$(CC) $(CFLAGS) -c -o $@ $< $(GTKFLAGS) 
-
-#creat.o: creat.c $(DEPS)
-#	$(CC) $(CFLAGS) -c -o $@ $< $(GTKFLAGS) 
-
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c 
 	$(CC) -c $(CFLAGS) $(GTKFLAGS) $< -o $@
 
-#$(BUILDDIR)/%.d
-#$(CC) -MM $< -MQ $(BUILDDIR)/$*.o -MF $(BUILDDIR)/$*.d
-#%.o: %.c $(DEP)
-#	$(CC) $(CFLAGS) -c -o $@ $<
-
 clean:
-	rm -f $(OBJ) $(NAME)
-
-#game.o: game.c
-#	$(CC) $(CFLAGS) -c -o $@ $<
-
-#lin-fifo.o: lin-fifo.c
-#	$(CC) $(CFLAGS) -c -o $@ $<
-
-#msg.o: msg.c
-#	$(CC) $(CFLAGS) -c -o $@ $<
+	rm -rf $(BUILDDIR) $(NAME)
 
