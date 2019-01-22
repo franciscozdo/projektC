@@ -5,3 +5,6 @@ win
 *.swp
 *.o
 *.xcf
+trash/*
+gra
+battleships

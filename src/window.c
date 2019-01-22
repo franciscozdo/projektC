@@ -13,16 +13,16 @@ static char *my_name, *opp_name;
 static PipesPtr pipes;
 static GtkWidget *my_but[100], *opp_but[100], *creat_but[100];
 static GtkWidget *messages, *sec_messages, *instructions;
-static struct statstruct {
+static struct statistics_struct {
     GtkWidget *my_sunk, *opp_sunk, *my_left, *opp_left;
 } statistics;
-static struct panel {
+static struct length_panel {
     GtkWidget *but[5];
     char index[5][4];
     bool waiting;
     int length;
 } ship_len;
-static struct panel2 {
+static struct orinetation_panel {
     GtkWidget *vert_but, *horizon_but;
     bool waiting;
     int orientation;
@@ -32,21 +32,22 @@ static char oindex[100][4], cindex[100][4];
 static bool my_round, game_run = false, end_of_game = false; // game_run - if game is started it's true
 static Ships my_ships, opp_ships, creat_ships;
 
-void pokazBlad(char *komunikat);
+void show_alert(char *komunikat);
 static void end (GtkWidget *widget, gpointer *data);
-static void getMove (GtkWidget *widget, char* ind);
+static void get_move (GtkWidget *widget, char* ind);
 static void new_game (GtkWidget *widget, gpointer *data);
 static void give_up (GtkWidget *widget, gpointer *data);
 static void rand_board (GtkWidget *widget, gpointer *data);
 static void create_board (GtkWidget *widget, gpointer *data);
 static void quit_sec (GtkWidget *widget, gpointer *data) ;
 static void confirm (GtkWidget *widget, gpointer *data);
-static void creatShip (GtkWidget *widget, char* ind);
+static void create_ship (GtkWidget *widget, char* ind);
 static void change_orient(GtkWidget *widget, char *ind);
 static void change_len(GtkWidget *widget, char *ind);
 static gboolean refresh (gpointer data);
-static void changeButton (GtkWidget *widget, int status);
+static void change_button (GtkWidget *widget, int status);
 static void epilog (char option);
+static void update_board(char option);
 static void update_instruction (); 
 static void update_stats();
 
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
 			int ind = i * N + j;
 			opp_but[ind] = gtk_button_new();
 			sprintf(oindex[ind], "%d%d", i, j);
-			g_signal_connect(G_OBJECT(opp_but[ind]), "clicked", G_CALLBACK(getMove), oindex[ind]);
+			g_signal_connect(G_OBJECT(opp_but[ind]), "clicked", G_CALLBACK(get_move), oindex[ind]);
 
 			gtk_grid_attach(GTK_GRID(main_grid), opp_but[ind], i + N + 1, j + 1 + S, 1, 1);
 		}
@@ -206,7 +207,7 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void pokazBlad(char *komunikat)
+void show_alert(char *komunikat)
 {
     GtkWidget *dialog;
     dialog=gtk_message_dialog_new (GTK_WINDOW(window),GTK_DIALOG_DESTROY_WITH_PARENT,
@@ -227,20 +228,20 @@ static void update_stats()
     sprintf(str, "Przeciwnikowi zostało: %d", opp_ships.left);
     gtk_label_set_text(GTK_LABEL(statistics.opp_left), str);
 }
-static void updateBoard(char c)
+static void update_board(char c)
 {
     if (c == 'm') {
         for (int i = 0; i < 100; ++i) {
-            changeButton (my_but[i], my_board[i/10][i%10]);
+            change_button (my_but[i], my_board[i/10][i%10]);
         }
     } else if (c == 'o'){
         for (int i = 0; i < 100; ++i) {
-            changeButton (opp_but[i], opp_board[i/10][i%10] == NOT_SHOOT ? UNKNOWN : opp_board[i/10][i%10]);
+            change_button (opp_but[i], opp_board[i/10][i%10] == NOT_SHOOT ? UNKNOWN : opp_board[i/10][i%10]);
         }
 
     } else if (c == 'c') {
          for (int i = 0; i < 100; ++i) {
-            changeButton (creat_but[i], creat_board[i/10][i%10]);
+            change_button (creat_but[i], creat_board[i/10][i%10]);
         }
     }
 }
@@ -356,8 +357,8 @@ static void create_board (GtkWidget *widget, gpointer *data)
 			int ind = i * N + j;
 			creat_but[ind] = gtk_button_new();
 			sprintf(cindex[ind], "%d%d", i, j);
-	        changeButton(creat_but[ind], NOT_SHOOT);
-			g_signal_connect(G_OBJECT(creat_but[ind]), "clicked", G_CALLBACK(creatShip), cindex[ind]);
+	        change_button(creat_but[ind], NOT_SHOOT);
+			g_signal_connect(G_OBJECT(creat_but[ind]), "clicked", G_CALLBACK(create_ship), cindex[ind]);
 
 			gtk_grid_attach(GTK_GRID(sec_grid), creat_but[ind], i + 1, j + 4, 1, 1);
 		}
@@ -419,7 +420,7 @@ static void change_len (GtkWidget *button, char *ind)
     ship_len.waiting = true;
 }
 
-static void creatShip (GtkWidget *button, char* ind)
+static void create_ship (GtkWidget *button, char* ind)
 {
     Shoot pos = makeShoot(ind[0] - '0', ind[1] - '0');
     gtk_label_set_text(GTK_LABEL(sec_messages), "");
@@ -441,7 +442,7 @@ static void creatShip (GtkWidget *button, char* ind)
             return;
         } 
     }
-    updateBoard('c');
+    update_board('c');
     update_instruction();
 }
 
@@ -449,7 +450,7 @@ static void confirm (GtkWidget *widget, gpointer *data)
 {
     if (allSunk(creat_ships)) {
         copyBoard(my_board, creat_board);
-        updateBoard('m');
+        update_board('m');
         quit_sec(NULL, NULL);
     } else {
         gtk_label_set_text(GTK_LABEL(sec_messages), "Ustaw wszystkie statki");
@@ -467,7 +468,7 @@ static void end (GtkWidget *widget, gpointer *data)
 	gtk_main_quit();
 }
 
-static void getMove (GtkWidget *button, char* ind) {
+static void get_move (GtkWidget *button, char* ind) {
     if (end_of_game) {
         gtk_label_set_text(GTK_LABEL(messages), "Gra się skończyła.");
         return;
@@ -482,7 +483,7 @@ static void getMove (GtkWidget *button, char* ind) {
         // Sending shoot and marking on board
         markOnBoard(s, opp_board, UNKNOWN);
         int ind = s.x * N + s.y;
-        changeButton(opp_but[ind], UNKNOWN);
+        change_button(opp_but[ind], UNKNOWN);
         my_round = false;
         gtk_label_set_text(GTK_LABEL(messages), "");
         sendMove(pipes, s);
@@ -491,7 +492,7 @@ static void getMove (GtkWidget *button, char* ind) {
     }
 }
 
-static void changeButton(GtkWidget *button, int stat) 
+static void change_button(GtkWidget *button, int stat) 
 {
     GtkWidget *im;
     gtk_widget_set_size_request(button, 35, 35);
@@ -541,10 +542,10 @@ static gboolean refresh(gpointer data)
                 --my_ships.count[size_of_ship];
                 --my_ships.left;
             } else {
-                changeButton(my_but[ind], stat);
+                change_button(my_but[ind], stat);
             }
             //puts("tutaj?");
-            updateBoard('m');
+            update_board('m');
             update_stats();
             sendFeedback(pipes, s, stat);
             if (my_ships.count[size_of_ship] == 0) {
@@ -571,7 +572,7 @@ static gboolean refresh(gpointer data)
                 size_of_ship = markSunk(s, opp_board);
                 --opp_ships.count[size_of_ship];
                 --opp_ships.left;
-                updateBoard('o');
+                update_board('o');
                 update_stats();
                 if (opp_ships.count[size_of_ship] == 0) {
                     if (allSunk(opp_ships)) {
@@ -581,16 +582,21 @@ static gboolean refresh(gpointer data)
                 }
             } else {
                 markOnBoard(s, opp_board, stat);
-                changeButton(opp_but[ind], stat);
+                change_button(opp_but[ind], stat);
             }
 		} else if (msg[0] == 'g') {
             epilog('g');
         } else if (msg[0] == 'n') {
             game_run = false;
+            end_of_game = false;
             clearBoard(opp_board);
 	        randBoard(my_board, &my_ships, my_name[0]);
-            updateBoard('m');
-            updateBoard('o');
+            update_board('m');
+            update_board('o');
+        } else if (msg[0] == 'r') { // reveal
+            Shoot s = makeShoot(msg[1], msg[2]);
+            markOnBoard(s, opp_board, msg[3]);
+            update_board('o');
         }
 	}
 	return TRUE;
@@ -601,17 +607,39 @@ static void epilog (char option)
     char alert[100];
     if (option == 'w') {
         sprintf(alert, "Wygrałeś.\n Zestrzeliłeś wszystkie statki gracza %s\n", opp_name);
-        pokazBlad(alert);
+        show_alert(alert);
     } else if (option == 'L'){
         sprintf(alert, "Przegrałeś.\n Gracz %s zestrzelił Ci wszystkie statki.\n", opp_name);
-        pokazBlad(alert);
+        show_alert(alert);
     } else if (option == 'g') {
         sprintf(alert, "Twój przeciwnik poddał się.\nWygrałeś.\n");
-        pokazBlad(alert);
+        show_alert(alert);
     } else if (option == 'l') {
         sprintf(alert, "Poddałeś się.");
-        pokazBlad(alert);
+        show_alert(alert);
     }   
+    gtk_label_set_text(GTK_LABEL(messages), "Koniec Gry. Oto plansza przeciwnika.");
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            Shoot s = makeShoot(i, j);
+            Status stat;
+            switch (checkOnBoard(s, my_board)) {
+                case NOT_SHOOT: case MISSED:
+                    stat = MISSED;
+                    break;
+                case SHIP:
+                    stat = HIT;
+                    break;
+                case MY_HIT: case SUNK:
+                    stat = SUNK;
+                    break;
+                default:
+                    stat = MISSED;
+                    break;
+            }
+            sendReveal(pipes, s, stat);
+        }
+    }
     game_run = false;
     end_of_game = true;
 }
@@ -629,8 +657,8 @@ static void new_game (GtkWidget *widget, gpointer *data)
 	randBoard(my_board, &my_ships, my_name[0]);
     opp_ships = creat_ships = my_ships;
     if (my_name[0] == 'A') my_round = true;
-    updateBoard('m');
-    updateBoard('o');
+    update_board('m');
+    update_board('o');
     update_stats();
 }
 
@@ -638,6 +666,10 @@ static void give_up (GtkWidget *widget, gpointer *data)
 {
     if (end_of_game) {
         gtk_label_set_text(GTK_LABEL(messages), "Gra się skończyła.");
+        return;
+    }
+    if (!game_run) {
+        gtk_label_set_text(GTK_LABEL(messages), "Nie możesz się poddać. Gra się nie rozpoczęła.");
         return;
     }
     sendSignal(pipes, 2);
@@ -655,5 +687,5 @@ static void rand_board (GtkWidget *widget, gpointer *data)
         return;
     }
 	randBoard(my_board, &my_ships, my_name[0]);
-    updateBoard('m');
+    update_board('m');
 }

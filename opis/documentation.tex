@@ -1,0 +1,113 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{indentfirst}
+\usepackage{amsmath, amsfonts}
+\usepackage[nofoot,hdivide={2cm,*,2cm},vdivide={2cm,*,2cm}]{geometry}
+\frenchspacing
+\pagestyle{empty}
+
+\author{Franciszek Zdobylak}
+\title{\Huge{\bf{Gra w Statki}}\\
+				\small Dokumentacja}
+
+\begin{document}
+\maketitle
+
+\section{Komunikacja między procesami}
+    Programy komunikują się przy użyciu plików kolejkowych. Do ich implementacji użyłem pliku pokazywanego na wykładzie 
+    Wstępu do C (\texttt{lin-fifo.c}). 
+
+    Do obsługi użyłem swojego modułu który wysyła specjalnie przygotowane wiadomości do bliźniaczego procesu używając
+interfejsu wytworzonego w poprzednio wspomnianym pliku. 
+
+Wszystkie wiadomości są postaci $mx_{1}x_{2}s$, gdzie \\
+$m$ - tryb (s - zapytanie, f - odpowiedź, n - nowa gra, g - poddanie się), \\
+$x_{1},x_{2}$ - współrzędnie strzału (jeśli wiadomość nie wymaga tego to dowolne znaki) \\
+$s$ - status pola oznaczonego przez współrzędne $x_{1}, x_{2}$. 
+Dostępne funkcje:
+\begin{itemize}
+    \item \texttt{sendMove(PipesPtr, Shoot)} - wysyła zapytanie o dane pole na planszy
+    \item \texttt{sendFeedback(PipesPtr, Shoot, Status)} - wysyła odpowiedź na zapytanie poprzedniej funkcji
+    \item \texttt{sendSignal(PipesPtr, int)} - wysyłanie sygnału nowej gry(1), poddania się (0)
+    \item \texttt{sendReveal(PipesPtr, Shoot, Status)} - wysyłanie inforamcji o polu na planszy po zakończeniu gry (odkrywanie planszy)
+    \item \texttt{getMessage(PipesPtr, char*)} - odbieranie wiadomości
+    \end{itemize}
+
+\section{Logika gry}
+    Do obsługi gry służy moduł znajdujący się w plikach \texttt{game.c i game.h}. 
+Są w nim opisane wszystkie funkcje  oraz typy danych potrzebne do toczenia rozgrywki.
+
+\subsection{Typy danych}
+\begin{itemize}
+    \item Typ wyliczeniowy \texttt{Status} - służacy do zaznaczania statnów na planszy. Składa się z elementów:
+    NOT\_SHOOT, SHIP, MISSED, HIT, SUNK, MY\_HIT, UNKNOWN.
+    \item Struktura \texttt{Shoot} - para liczb służąca do określenie pozycji na planszy
+    \item Struktura \texttt{Ships} - przechowuje ilość statków poszczególnej długości, 
+        długość najdłuższego oraz liczbę wszystkich statków i pozostałych (niezestrzelonych)
+    \item Typ \texttt{Board} - tablica 2-wymiarowa 10x10 przechowująca opis planszy (zgodnie z wartościami typu \texttt{Status})
+\end{itemize}
+
+\subsection{Ważniejsze funkcje}
+\begin{itemize}
+    \item \texttt{bool isSunk(Shoot s, Board b)} - zwraca prawdę jeśli statek, którego część znajduje się
+na pozycji podanej jako pierwszy argument, jest zatopiony (tzn. każde pole na którym się znajduje oznaczone jest
+jako trafione
+    \item \texttt{int markSunk(Shoot s, Board b)} - zaznacza cały statek jako zatopiony (zmienia status z HIT/MY\_HIT na SUNK),
+zwraca długość zaznaczonego statku
+    \item \texttt{bool placeShip(int length, int orientation, Shoot, Board)} - próbuje ustawić statek
+o długości \texttt{length} i orientacji (1 - poziomej, 0 - pionowej) zaczynając na polu s na planszy b.
+Jeśli się da to zwraca prawdę i zaznacza statek na planszy. W przeciwnym wypadku zwraca fałsz.
+    \item \texttt{void removeShip(Shoot pos, Board b)} - usuwa statek którego część znajduje się na pozycji \texttt{pos} z planszy b.
+\end{itemize}
+
+\section{Tworzenie planszy}
+Tworzenie plansz oraz ładowanie ilości statków z pliku umieszczone jest w module \texttt{boards}. 
+Dostępne funkcje:
+\begin{itemize}
+    \item \texttt{getShips(Ships *s)} - pobiera ilość statków z pliku \texttt{ships.len}. Przy wczytywaniu
+pomija linie oznaczone znakiem \texttt{\#} (są to komentarze).
+    \item \texttt{randBoard(Board b, Ships *s, char name)} - funkcja wywoływana przez resztę modułów.
+Generuje planszę oraz wczytuje długości statków z pliku.
+    \item \texttt{genBoard(Board b, Ships s, char name)} - funkcja generująca plnnaszę z ilością statków,
+które zostały podane jako jeden z parametrów. Znak \texttt{name} służy do lepszego generowania losowych liczb. 
+Algorytm wstawiania statków jest prosty. Losujemy miejsce w którym statek ma się zaczynać oraz jego orientację. 
+Jeśli statek się w takim miejscu nie zmieści to sprawdzamy czy zmieści się w innej orientacji w tym miejscu. 
+Jeśli znów nie, to przesuwamy się o jedno miejsce dalej. Jeśli statek nie może zostać położony w żadny miejscu,
+to generujemy planszę od nowa. Statków nie jest za dużo, więc praktycznie jest to niemożliwe aby algorytm się zapętlił w nieskończoność.
+\end{itemize}
+
+\section{Tworzenie okna}
+Okno tworzę przy pomocy biblioteki GTK 3.0. Całe tworzenie okna głównego oraz okna tworzenia planszy jest zaimplementowane w module \texttt{window.c}.
+\subsection{Ważniejsze Funkcje}
+\begin{itemize}
+    \item \texttt{show\_alert(char *alert)} - funkcja do wyświetlania okna dialogowego z komunikatem \texttt{alert}
+    \item \texttt{get\_move()} - funkcje do obsługi klikania guzików na planszy
+    \item \texttt{create\_board()} - wyświetla okienko wyboru planszy
+    \item \texttt{create\_ship()} - próbuje ustawić statek na polach zaczynających się od klikniętego
+(ta funkcja jest podłączona do przycisków na planszy ustawiania statków)
+    \item \texttt{refresh()} - funkcja do pobierania wiadomości z pliku kolejkowego w odpowiednich odstępach czasowych
+    \item \texttt{chage\_button(GtkWidget *button, Status stat)} - zmienia grafikę na przycisku \texttt{button}
+w zależności od statusu \texttt{stat}
+    \item \texttt{epilog(char option)} - zakończenie gry w zależności od opcji. (\texttt{'w'} - wyrana, \texttt{'L'} - przegrana,
+\texttt{'g'} - przeciwnik poddał się, \texttt{'l'} - poddanie się)
+    \item \texttt{update\_board(char option)} - aktualizuje planszę w zależności od opcji (\texttt{'m'} - moją,
+\texttt{'o'} - przeciwnika, \texttt{'c'} - ustawiania statków)
+    \item \texttt{main()} - tworzy główne okno
+\end{itemize}
+
+\subsection{Struktury i zmienne}
+\begin{itemize}
+    \item \texttt{struct statistics\_struct} - przechowuje wskaźniki na obiekty typu GTK\_LABEL służące
+do wyświetlania statystyk
+    \item \texttt{struct length\_panel} - przechowuje przyciski zmieniające długość stawianego statku
+w oknie tworzenia planszy
+    \item \texttt{struct orientation\_panel} - przechowuje przyciski zmieniające orientację stawianego
+statku w oknie tworzenia planszy
+    \item \texttt{bool my\_round} - \texttt{true} jeśli trwa runda gracza
+    \item \texttt{bool game\_run} - \texttt{true} jeśli gra jest rozpoczęta
+    \item \texttt{bool end\_of\_game} - \texttt{true} jeśli gra się skończyła
+\end{itemize}   
+
+\end{document}
