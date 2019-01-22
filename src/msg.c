@@ -47,3 +47,16 @@ void sendSignal(PipesPtr pipes, int signal)
         sendStringToPipe(pipes, "gxxx");
     }
 }
+
+void sendReveal(PipesPtr pipes, Shoot s, Status stat)
+{
+    char msg[5];
+    msg[0] = 'r';
+    msg[1] = s.x + 'A';
+    msg[2] = s.y + 'A';
+    msg[3] = stat;
+    msg[4] = '\0';
+
+    sendStringToPipe(pipes, msg);
+	//printf("Wysyłam %s\n", msg);
+}

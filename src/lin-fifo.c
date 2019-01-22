@@ -12,7 +12,7 @@ struct pipes {
 } ;
 
 int fileno(FILE *file);
-void pokazBlad(char *komunikat);
+void show_alert(char *komunikat);
 static FILE *openOutPipe(char *name);
 static FILE *openInPipe(char *name);
 
@@ -49,7 +49,7 @@ static FILE *openOutPipe(char *name) {
     FILE *pipe = fopen(name, "w+");
     if (pipe == NULL)
     {
-        pokazBlad("Error in creating output pipe");
+        show_alert("Error in creating output pipe");
         exit(-1);
     }
     return pipe;
@@ -63,7 +63,7 @@ static FILE *openInPipe(char *name){
     }
     if (pipe == NULL)
     {
-        pokazBlad("Error in creating input pipe");
+        show_alert("Error in creating input pipe");
         exit(-1);
     }
     int flags, fd;
@@ -79,13 +79,13 @@ void sendStringToPipe(PipesPtr pipes, const char *data)
     int result = fprintf(pipes->fifo_out,"%s",data);
     fflush(pipes->fifo_out);
     if (result == 0)
-        pokazBlad("Failed to send data");
+        show_alert("Failed to send data");
 }
 
 bool getStringFromPipe(PipesPtr pipes, char *buffer, size_t size)
 {
     char *result = fgets(buffer,size,pipes->fifo_in);
     fflush(pipes->fifo_in);
-    //if (result == NULL) pokazBlad("Failed to read data");
+    //if (result == NULL) show_alert("Failed to read data");
     return result != NULL;
 }

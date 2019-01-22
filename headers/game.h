@@ -26,7 +26,7 @@ Status checkOnBoard(Shoot s, Board b);
 bool isSunk(Shoot s, Board b);
 int markSunk(Shoot s, Board b); // returns number of changed boxes
 bool allSunk(Ships ships); // n - number of lengths of ships
-void copyBoard(Board b1, Board b2);
+void copyBoard(Board b1, Board b2); // from b2 to b1
 bool placeShip(int slen, int orientation, Shoot pos, Board b);
 int removeShip(Shoot pos, Board b);
 
