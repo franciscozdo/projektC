@@ -1,7 +1,10 @@
-Plan/*.aux
-Plan/*.log
+*.aux
+*.log
 test.c
 win
 *.swp
 *.o
 *.xcf
+trash/*
+gra
+battleships
