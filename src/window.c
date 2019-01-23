@@ -4,6 +4,15 @@
 #include "../headers/boards.h"
 #include "../headers/game.h"
 
+/********************************************
+ *            Franciszek Zdobylak           *
+ *              nr ind. 310313              *
+ *                                          *
+ *   Projekt na Wstęp do Programowania w C  *
+ *               Gra w Statki               *
+ *                                          *
+ ********************************************/
+
 #define MAKS_DL_TEKSTU 3
 #define N 10
 #define S 2 // ile wolnych wierszy przed planszami

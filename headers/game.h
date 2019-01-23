@@ -1,6 +1,15 @@
 #include <stdbool.h>
 #include <ctype.h>
 
+/********************************************
+ *            Franciszek Zdobylak           *
+ *              nr ind. 310313              *
+ *                                          *
+ *   Projekt na Wstęp do Programowania w C  *
+ *               Gra w Statki               *
+ *                                          *
+ ********************************************/
+
 #ifndef GAME
 #define GAME
 

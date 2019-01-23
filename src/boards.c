@@ -1,10 +1,15 @@
 #include "../headers/boards.h"
 #include "../headers/game.h"
 #include <stdio.h>
-// W grze nie jest za dużo statków więc jest bardzo mała szansa na to
-// że funkcja nigdy się nie skończy wykonywać
-// (gdy nie ma możliwości położenia jakiegoś statku na planszy po prostu
-//  zaczyna układać statki od nowa)
+
+/********************************************
+ *            Franciszek Zdobylak           *
+ *              nr ind. 310313              *
+ *                                          *
+ *   Projekt na Wstęp do Programowania w C  *
+ *               Gra w Statki               *
+ *                                          *
+ ********************************************/
 
 static int min (int a, int b)
 {

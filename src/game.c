@@ -1,5 +1,14 @@
 #include "../headers/game.h"
 
+/********************************************
+ *            Franciszek Zdobylak           *
+ *              nr ind. 310313              *
+ *                                          *
+ *   Projekt na Wstęp do Programowania w C  *
+ *               Gra w Statki               *
+ *                                          *
+ ********************************************/
+
 static int dir[8] = {1, 0, -1, 0, 0, 1, 0, -1}; // directions for dfs in isSunk()
 static int skos[8] = {1, 1, -1, -1, 1, -1, -1, 1};
 

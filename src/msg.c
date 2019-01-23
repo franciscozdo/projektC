@@ -1,5 +1,13 @@
 #include "../headers/msg.h"
-//#include <stdio.h>
+
+/********************************************
+ *            Franciszek Zdobylak           *
+ *              nr ind. 310313              *
+ *                                          *
+ *   Projekt na Wstęp do Programowania w C  *
+ *               Gra w Statki               *
+ *                                          *
+ ********************************************/
 
 void sendMove(PipesPtr pipes, Shoot s) 
 {
