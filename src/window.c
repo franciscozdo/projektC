@@ -588,11 +588,7 @@ static gboolean refresh(gpointer data)
             epilog('g');
         } else if (msg[0] == 'n') {
             game_run = false;
-            end_of_game = false;
-            clearBoard(opp_board);
-	        randBoard(my_board, &my_ships, my_name[0]);
-            update_board('m');
-            update_board('o');
+            new_game(NULL, NULL);
         } else if (msg[0] == 'r') { // reveal
             Shoot s = makeShoot(msg[1], msg[2]);
             markOnBoard(s, opp_board, msg[3]);
@@ -650,7 +646,6 @@ static void new_game (GtkWidget *widget, gpointer *data)
         gtk_label_set_text(GTK_LABEL(messages), "Najpierw się poddaj, aby skończyć grę.");
         return;
     }   
-    game_run = false;
     end_of_game = false;
     if(data != NULL) sendSignal(pipes, 1);
     clearBoard(opp_board);
