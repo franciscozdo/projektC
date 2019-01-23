@@ -16,37 +16,37 @@
 \maketitle
 
 \section{Komunikacja między procesami}
-    Programy komunikują się przy użyciu plików kolejkowych. Do ich implementacji użyłem pliku pokazywanego na wykładzie 
+    Programy komunikują się przy użyciu plików kolejkowych. Do ich implementacji użyłem pliku pokazywanego podczas wykładu 
     Wstępu do C (\texttt{lin-fifo.c}). 
 
-    Do obsługi użyłem swojego modułu który wysyła specjalnie przygotowane wiadomości do bliźniaczego procesu używając
+    Do obsługi użyłem swojego modułu, który wysyła specjalnie przygotowane wiadomości do bliźniaczego procesu używając
 interfejsu wytworzonego w poprzednio wspomnianym pliku. 
 
 Wszystkie wiadomości są postaci $mx_{1}x_{2}s$, gdzie \\
-$m$ - tryb (s - zapytanie, f - odpowiedź, n - nowa gra, g - poddanie się), \\
-$x_{1},x_{2}$ - współrzędnie strzału (jeśli wiadomość nie wymaga tego to dowolne znaki) \\
-$s$ - status pola oznaczonego przez współrzędne $x_{1}, x_{2}$. 
+$m$ -- tryb (s - zapytanie, f - odpowiedź, n - nowa gra, g - poddanie się), \\
+$x_{1},x_{2}$ -- współrzędnie strzału (jeśli wiadomość nie wymaga tego to dowolne znaki), \\
+$s$ -- status pola oznaczonego przez współrzędne $x_{1}, x_{2}$. 
 Dostępne funkcje:
 \begin{itemize}
     \item \texttt{sendMove(PipesPtr, Shoot)} - wysyła zapytanie o dane pole na planszy
     \item \texttt{sendFeedback(PipesPtr, Shoot, Status)} - wysyła odpowiedź na zapytanie poprzedniej funkcji
     \item \texttt{sendSignal(PipesPtr, int)} - wysyłanie sygnału nowej gry(1), poddania się (0)
     \item \texttt{sendReveal(PipesPtr, Shoot, Status)} - wysyłanie inforamcji o polu na planszy po zakończeniu gry (odkrywanie planszy)
-    \item \texttt{getMessage(PipesPtr, char*)} - odbieranie wiadomości
+    \item \texttt{getMessage(PipesPtr, char*)} - odbieranie wiadomości i zapisywanie w stringu podanym jako parametr
     \end{itemize}
 
 \section{Logika gry}
     Do obsługi gry służy moduł znajdujący się w plikach \texttt{game.c i game.h}. 
-Są w nim opisane wszystkie funkcje  oraz typy danych potrzebne do toczenia rozgrywki.
+Są w nim opisane wszystkie funkcje oraz typy danych potrzebne do toczenia rozgrywki.
 
 \subsection{Typy danych}
 \begin{itemize}
-    \item Typ wyliczeniowy \texttt{Status} - służacy do zaznaczania statnów na planszy. Składa się z elementów:
+    \item Typ wyliczeniowy \texttt{Status} - służy do zaznaczania statnów na planszy. Składa się z elementów:
     NOT\_SHOOT, SHIP, MISSED, HIT, SUNK, MY\_HIT, UNKNOWN.
-    \item Struktura \texttt{Shoot} - para liczb służąca do określenie pozycji na planszy
+    \item Struktura \texttt{Shoot} - para liczb, służy do określenie pozycji na planszy
     \item Struktura \texttt{Ships} - przechowuje ilość statków poszczególnej długości, 
         długość najdłuższego oraz liczbę wszystkich statków i pozostałych (niezestrzelonych)
-    \item Typ \texttt{Board} - tablica 2-wymiarowa 10x10 przechowująca opis planszy (zgodnie z wartościami typu \texttt{Status})
+    \item Typ \texttt{Board} - tablica 2-wymiarowa 10x10, przechowuje opis planszy (zgodnie z wartościami typu \texttt{Status})
 \end{itemize}
 
 \subsection{Ważniejsze funkcje}
@@ -63,7 +63,7 @@ Jeśli się da to zwraca prawdę i zaznacza statek na planszy. W przeciwnym wypa
 \end{itemize}
 
 \section{Tworzenie planszy}
-Tworzenie plansz oraz ładowanie ilości statków z pliku umieszczone jest w module \texttt{boards}. 
+Tworzenie plansz oraz ładowanie ilości statków z pliku umieszczone jest w module w plikach \texttt{boards.c i boards.h}. 
 Dostępne funkcje:
 \begin{itemize}
     \item \texttt{getShips(Ships *s)} - pobiera ilość statków z pliku \texttt{ships.len}. Przy wczytywaniu
@@ -87,7 +87,8 @@ Okno tworzę przy pomocy biblioteki GTK 3.0. Całe tworzenie okna głównego ora
     \item \texttt{create\_board()} - wyświetla okienko wyboru planszy
     \item \texttt{create\_ship()} - próbuje ustawić statek na polach zaczynających się od klikniętego
 (ta funkcja jest podłączona do przycisków na planszy ustawiania statków)
-    \item \texttt{refresh()} - funkcja do pobierania wiadomości z pliku kolejkowego w odpowiednich odstępach czasowych
+    \item \texttt{refresh()} - funkcja do pobierania wiadomości z pliku kolejkowego w odpowiednich odstępach czasowych.
+W zależności od otrzymanej wiadomości wywołuje odpowiednie czynności (rozpoczęcie nowej gry, sprawdzenie pola na planszy itp.)
     \item \texttt{chage\_button(GtkWidget *button, Status stat)} - zmienia grafikę na przycisku \texttt{button}
 w zależności od statusu \texttt{stat}
     \item \texttt{epilog(char option)} - zakończenie gry w zależności od opcji. (\texttt{'w'} - wyrana, \texttt{'L'} - przegrana,

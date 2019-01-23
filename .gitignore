@@ -1,5 +1,5 @@
-Plan/*.aux
-Plan/*.log
+*.aux
+*.log
 test.c
 win
 *.swp
